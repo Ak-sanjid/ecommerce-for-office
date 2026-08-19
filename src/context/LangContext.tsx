@@ -86,6 +86,8 @@ export const dict = {
   secs: { en: "Secs", bn: "সেকেন্ড" },
   filters: { en: "Filters", bn: "ফিল্টার" },
   price: { en: "Price", bn: "দাম" },
+  priceLow: { en: "Price: low to high", bn: "দাম: কম থেকে বেশি" },
+  priceHigh: { en: "Price: high to low", bn: "দাম: বেশি থেকে কম" },
   brand: { en: "Brand", bn: "ব্র্যান্ড" },
   ingredients: { en: "Ingredients", bn: "উপাদান" },
   safety: { en: "Safety", bn: "নিরাপত্তা" },

@@ -1,32 +1,34 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { products } from "@/data/products";
-import { useLang } from "@/context/LangContext";
-import { ProductCard } from "@/components/product/ProductCard";
+import { FilterPanel } from "@/components/listing/FilterPanel";
+import { ProductGrid } from "@/components/listing/ProductGrid";
+import { filterProducts, parseListParam } from "@/lib/catalog";
 
-function Results() {
-  const q = (useSearchParams().get("q") ?? "").toLowerCase();
-  const { t } = useLang();
-  const list = products.filter((p) => `${p.name} ${p.nameBangla} ${p.brand} ${p.ingredients.join(" ")}`.toLowerCase().includes(q));
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const q = typeof searchParams.q === "string" ? searchParams.q : "";
+  const items = filterProducts({
+    q,
+    brand: typeof searchParams.brand === "string" ? searchParams.brand : undefined,
+    min: searchParams.min ? Number(searchParams.min) : undefined,
+    max: searchParams.max ? Number(searchParams.max) : undefined,
+    ingredients: parseListParam(searchParams.ing),
+    badges: parseListParam(searchParams.badge),
+    sort: typeof searchParams.sort === "string" ? searchParams.sort : undefined,
+  });
+
   return (
-    <div className="container-page py-10">
-      <h1 className="font-display text-4xl mb-6">{q || t("search")}</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {list.map((p) => (
-          <div key={p.id} className="[&>article]:w-full"><ProductCard product={p} /></div>
-        ))}
+    <div className="container-page flex gap-8 py-8">
+      <div className="hidden w-56 shrink-0 lg:block">
+        <Suspense fallback={null}>
+          <FilterPanel />
+        </Suspense>
       </div>
-      {!list.length && <p>{t("noResults")}</p>}
+      <Suspense fallback={null}>
+        <ProductGrid items={items} title={q ? `Results for “${q}”` : "Search"} />
+      </Suspense>
     </div>
-  );
-}
-
-export default function SearchPage() {
-  return (
-    <Suspense>
-      <Results />
-    </Suspense>
   );
 }
