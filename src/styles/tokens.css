@@ -1,0 +1,40 @@
+:root {
+  --cream: #fbf7f0;
+  --cream-deep: #f1e8da;
+  --ivory: #fffcf7;
+  --paper: #f6efe4;
+  --gold: #c4a265;
+  --gold-soft: #e4d2ae;
+  --gold-deep: #8f7040;
+  --rosegold: #c9a08a;
+  --ink: #2b2b2b;
+  --ink-soft: #4a433c;
+  --review: #6e6e6e;
+  --review-bg: #f3f3f3;
+  --line: color-mix(in srgb, var(--gold) 38%, var(--cream-deep));
+  --shadow: 0 18px 40px -28px rgb(43 43 43 / 28%);
+  --serif: "Cormorant Garamond", "Times New Roman", serif;
+  --sans: "Outfit", "Segoe UI", sans-serif;
+  --header-promo: 34px;
+  --header-main: 76px;
+  --header-cat: 46px;
+  --header-quick: 44px;
+  --radius: 18px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+
+[data-tone="masculine"] {
+  --gold: #b08a5a;
+  --gold-soft: #d4c3a4;
+  --gold-deep: #6f5840;
+  --rosegold: #8c7b6a;
+  --cream: #f4efe7;
+  --ivory: #faf7f2;
+}
+
+[data-tone="feminine"] {
+  --gold: #c9a36e;
+  --rosegold: #d4a89a;
+  --gold-soft: #edd6c4;
+}
