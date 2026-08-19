@@ -1,104 +1,145 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { brands } from "@/data/brands";
 import { products, slugify } from "@/data/products";
+import { Icon } from "@/components/shared/Icon";
 import { useLang } from "@/context/LangContext";
-import { formatBdt, productName } from "@/lib/utils";
+import { bdt } from "@/lib/format";
+import { productName } from "@/lib/utils";
 
-export function SearchBar() {
-  const { lang, t } = useLang();
+export function SearchBar({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const { lang, t } = useLang();
+  const [q, setQ] = useState("");
+  const [brand, setBrand] = useState<string | null>(null);
+  const [openBrand, setOpenBrand] = useState(false);
+  const [focused, setFocused] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
-      if (wrap.current && !wrap.current.contains(e.target as Node)) setOpen(false);
+    const h = (e: MouseEvent) => {
+      if (wrap.current && !wrap.current.contains(e.target as Node)) {
+        setOpenBrand(false);
+        setFocused(false);
+      }
     };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const q = query.trim().toLowerCase();
-  const hits = useMemo(() => {
-    if (q.length < 1) return { products: [], brands: [] };
-    return {
-      products: products
-        .filter((p) => `${p.brand} ${p.name} ${p.nameBangla} ${p.ingredients.join(" ")}`.toLowerCase().includes(q))
-        .slice(0, 6),
-      brands: brands.filter((b) => b.name.toLowerCase().includes(q)).slice(0, 4),
-    };
-  }, [q]);
+  const suggestions =
+    q.length > 1
+      ? products
+          .filter((p) =>
+            `${p.name} ${p.nameBangla} ${p.brand} ${p.ingredients.join(" ")}`
+              .toLowerCase()
+              .includes(q.toLowerCase()),
+          )
+          .slice(0, 5)
+      : [];
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const p = new URLSearchParams();
+    if (q) p.set("q", q);
+    if (brand) p.set("brand", brand);
+    router.push(`/search?${p.toString()}`);
+    setFocused(false);
+  };
 
   return (
-    <div className="py-3" ref={wrap}>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (query.trim()) {
-            router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-            setOpen(false);
-          }
-        }}
-        className="relative"
-      >
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder={t("search")}
-          className="w-full h-11 pl-4 pr-12 bg-white border border-gold/30 rounded-full text-sm placeholder:text-off-black/40 focus:outline-none focus:ring-2 focus:ring-gold/30"
-          aria-label={t("search")}
-        />
-        <button type="submit" className="absolute right-2 top-1 p-2 text-off-black/50" aria-label={t("search")}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <circle cx="11" cy="11" r="6.2" />
-            <path d="m20 20-3.4-3.4" />
-          </svg>
-        </button>
+    <div ref={wrap} className={compact ? "relative" : "relative py-3"}>
+      <form onSubmit={submit} className="flex items-stretch">
+        <div className="relative flex-1">
+          <Icon
+            name="search"
+            size={17}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-off-black/35"
+          />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onFocus={() => setFocused(true)}
+            placeholder={t("search")}
+            aria-label={t("search")}
+            className={`w-full rounded-l-xl border border-off-black/10 bg-white pl-11 pr-3 text-sm
+                        placeholder:text-off-black/35 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/25
+                        transition ${compact ? "py-2.5" : "py-3"}`}
+          />
+        </div>
 
-        {open && q && (
-          <div className="absolute left-0 right-0 top-[calc(100%+6px)] bg-white border border-gold/20 shadow-panel rounded-xl p-2 z-50 max-h-80 overflow-auto">
-            {hits.brands.map((b) => (
-              <Link
-                key={b.id}
-                href={`/brand/${b.id}`}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 hover:bg-cream rounded-lg text-sm"
+        <div className="relative hidden sm:block">
+          <button
+            type="button"
+            onClick={() => setOpenBrand((v) => !v)}
+            aria-expanded={openBrand}
+            className="flex h-full items-center gap-1 border-y border-off-black/10 bg-white px-3 text-xs text-off-black/60 hover:text-gold transition-colors"
+          >
+            {brand ? brands.find((b) => b.id === brand)?.name : t("allBrands")}
+            <Icon name="chevron" size={12} />
+          </button>
+          {openBrand && (
+            <div className="absolute right-0 top-full z-50 mt-1 max-h-72 w-52 overflow-y-auto rounded-xl border border-off-black/5 bg-white py-2 shadow-panel">
+              <button
+                type="button"
+                onClick={() => {
+                  setBrand(null);
+                  setOpenBrand(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-cream"
               >
-                <span className="text-[10px] tracking-widest uppercase text-gold-dark">Brand</span>
-                {b.name}
-              </Link>
-            ))}
-            {hits.products.map((p) => (
-              <Link
-                key={p.id}
-                href={`/product/${slugify(p.name)}`}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 hover:bg-cream rounded-lg"
-              >
-                <img src={p.image} alt="" className="w-12 h-12 object-cover rounded" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] tracking-widest uppercase text-gold-dark">{p.brand}</div>
-                  <div className="text-sm truncate">{productName(p, lang)}</div>
-                </div>
-                <strong className="text-sm">{formatBdt(p.flashSale?.price ?? p.price)}</strong>
-              </Link>
-            ))}
-            {!hits.products.length && !hits.brands.length && (
-              <p className="px-3 py-3 text-sm text-off-black/60">{t("noResults")}</p>
-            )}
-          </div>
-        )}
+                {t("allBrands")}
+              </button>
+              <hr className="my-1 border-off-black/5" />
+              {brands.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    setBrand(b.id);
+                    setOpenBrand(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-cream ${brand === b.id ? "font-medium text-gold" : ""}`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          aria-label={t("search")}
+          className="rounded-r-xl bg-gold px-5 text-off-black hover:bg-gold-dark hover:text-cream transition-colors"
+        >
+          <Icon name="search" size={17} />
+        </button>
       </form>
+
+      {focused && suggestions.length > 0 && (
+        <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-off-black/5 bg-white shadow-panel">
+          {suggestions.map((p) => (
+            <Link
+              key={p.id}
+              href={`/product/${slugify(p.name)}`}
+              onClick={() => setFocused(false)}
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-cream transition-colors"
+            >
+              <img src={p.image} alt="" className="h-9 w-9 shrink-0 rounded-md object-cover bg-cream-deep" />
+              <div className="min-w-0">
+                <p className="truncate text-sm text-off-black">{productName(p, lang)}</p>
+                <p className="text-[11px] text-off-black/45">{p.brand}</p>
+              </div>
+              <span className="ml-auto text-sm font-medium text-gold">{bdt(p.flashSale?.price ?? p.price)}</span>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

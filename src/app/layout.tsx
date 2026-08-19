@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-body bg-cream text-off-black antialiased">
         <Providers>
           <Header />
-          <main className="min-h-screen pt-[208px] lg:pt-[268px]">{children}</main>
+          <main className="min-h-screen">{children}</main>
           <Footer />
           <CartSlideOut />
           <AccountModal />

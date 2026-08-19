@@ -107,7 +107,7 @@ export function ShopByConcern() {
       <SectionHead kicker={t("shopConcern")} title={t("shopConcernSub")} />
       <DragRail>
         {concerns.map((c) => (
-          <Link key={c.id} href={`/category/skincare?concern=${c.id}`} className="w-40 text-center">
+          <Link key={c.id} href={`/concern/${c.id}`} className="w-40 text-center">
             <div className="w-40 h-40 rounded-full overflow-hidden border border-gold/25">
               <img src={c.image} alt="" className="w-full h-full object-cover" loading="lazy" />
             </div>

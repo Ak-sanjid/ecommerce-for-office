@@ -1,53 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TopBar } from "./TopBar";
 import { SearchBar } from "./SearchBar";
 import { QuickCategoryRow } from "./QuickCategoryRow";
 import { CategoryBar } from "./CategoryBar";
-import { MobileMenu } from "./MobileMenu";
 import { PromoStrip } from "./PromoStrip";
+import { MobileMenu } from "./MobileMenu";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { cn } from "@/lib/utils";
 
 export function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [headerLayout, setHeaderLayout] = useState<"A" | "B">("A");
+  const { config } = useSiteConfig();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [height, setHeight] = useState(168);
+  const bar = useRef<HTMLElement>(null);
+  const layout = config.headerLayout;
 
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 72);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const el = bar.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setHeight(el.getBoundingClientRect().height));
+    ro.observe(el);
+    setHeight(el.getBoundingClientRect().height);
+    return () => ro.disconnect();
+  }, [layout, scrolled]);
+
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-gold/20",
-        isScrolled ? "bg-cream/95 backdrop-blur-md shadow-card" : "bg-cream",
-      )}
-    >
-      <PromoStrip onToggleLayout={() => setHeaderLayout((l) => (l === "A" ? "B" : "A"))} />
-      <TopBar onOpenMenu={() => setMobileMenuOpen(true)} />
-      <div className="container-page">
-        {headerLayout === "A" ? (
+    <>
+      <header
+        ref={bar}
+        className={cn(
+          "fixed inset-x-0 top-0 z-50 transition-shadow duration-200",
+          scrolled ? "bg-cream/95 backdrop-blur-md shadow-card" : "bg-cream",
+        )}
+      >
+        <TopBar onOpenMenu={() => setMenuOpen(true)} />
+
+        {layout === "A" ? (
           <>
-            <div className={cn(isScrolled && "hidden lg:block")}>
+            <div className="container-page hidden lg:block">
               <SearchBar />
             </div>
-            {!isScrolled && <QuickCategoryRow />}
+            <QuickCategoryRow />
+            <div
+              className={cn(
+                "hidden lg:block overflow-hidden transition-[max-height,opacity] duration-200",
+                scrolled ? "max-h-0 opacity-0" : "max-h-14 opacity-100",
+              )}
+            >
+              <CategoryBar />
+            </div>
           </>
         ) : (
-          <div className="py-2 my-2 text-center text-sm text-gold-dark bg-gold/5 rounded-lg">
-            Free delivery on orders above ৳2,000 · Use GLOW10 for 10% off
-          </div>
+          <>
+            <CategoryBar />
+            <PromoStrip />
+          </>
         )}
-      </div>
-      <div className="hidden lg:block">
-        <CategoryBar />
-      </div>
-      <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
-    </header>
+
+        <div className="container-page pb-3 lg:hidden">
+          <SearchBar compact />
+        </div>
+      </header>
+
+      <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+      <div aria-hidden className="shrink-0" style={{ height }} />
+    </>
   );
 }

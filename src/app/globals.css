@@ -71,6 +71,10 @@
     @apply font-display text-2xl sm:text-3xl lg:text-4xl font-semibold text-off-black;
   }
 
+  .section-subtitle {
+    @apply text-sm sm:text-base text-off-black/60 mt-1;
+  }
+
   .kicker {
     @apply inline-flex items-center gap-2 text-[11px] tracking-[0.22em] uppercase text-gold-dark font-medium;
   }

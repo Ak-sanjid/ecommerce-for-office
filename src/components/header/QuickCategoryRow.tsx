@@ -1,72 +1,71 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { navItems, quickCategories } from "@/data/categories";
+import { visibleSorted } from "@/config/site";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLang } from "@/context/LangContext";
+import { Icon } from "@/components/shared/Icon";
 
 export function QuickCategoryRow() {
-  const { openCart } = useCart();
-  const { setAccountOpen } = useAuth();
+  const { config } = useSiteConfig();
+  const { openCart, totalItems } = useCart();
+  const { isLoggedIn, user, setAccountOpen } = useAuth();
   const { lang, t } = useLang();
-  const [browse, setBrowse] = useState(false);
+  const shortcuts = visibleSorted(config.quickShortcuts);
 
   return (
-    <div className="flex items-center justify-between pb-3 gap-2">
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setBrowse((v) => !v)}
-            onBlur={() => setTimeout(() => setBrowse(false), 180)}
-            className="flex items-center gap-1.5 h-8 px-3 bg-off-black text-cream text-[11px] tracking-wider uppercase rounded"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 7h16M4 12h16M4 17h10" />
-            </svg>
-            <span className="hidden sm:inline">{t("browse")}</span>
-          </button>
-          {browse && (
-            <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gold/20 shadow-panel rounded-lg p-2 z-50">
-              {navItems
-                .filter((n) => n.slug !== "/")
-                .map((n) => (
-                  <Link
-                    key={n.slug}
-                    href={n.slug}
-                    className="flex justify-between px-3 py-2 text-sm hover:bg-cream rounded"
-                  >
-                    {lang === "bn" ? n.nameBn : n.name}
-                    <span>→</span>
-                  </Link>
-                ))}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-1 overflow-x-auto drag-scroll">
-          {quickCategories.map((cat) => (
+    <div className="border-t border-off-black/[0.05]">
+      <div className="container-page flex items-center gap-3 py-2">
+        <Link
+          href="/categories"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-gold/10 px-3 py-2 text-xs font-medium
+                     text-gold-dark hover:bg-gold/20 transition-colors"
+        >
+          <Icon name="grid" size={14} />
+          <span className="hidden sm:inline">{t("browse")}</span>
+          <span className="sm:hidden">{lang === "bn" ? "ক্যাটাগরি" : "Browse"}</span>
+        </Link>
+
+        <nav className="drag-scroll flex flex-1 items-center gap-1" aria-label="Quick categories">
+          {shortcuts.map((s) => (
             <Link
-              key={cat.slug}
-              href={cat.slug === "routine" ? "/quiz" : `/category/${cat.slug}`}
-              className="px-3 h-8 inline-flex items-center text-xs text-off-black/70 hover:text-off-black hover:bg-white border border-transparent hover:border-gold/30 rounded-full whitespace-nowrap"
+              key={s.id}
+              href={s.href}
+              className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs text-off-black/60
+                         hover:bg-gold/5 hover:text-gold transition-colors"
             >
-              {lang === "bn" ? cat.nameBn : cat.name}
+              {lang === "bn" ? s.labelBn : s.label}
             </Link>
           ))}
+        </nav>
+
+        <div className="hidden shrink-0 items-center gap-1 lg:flex">
+          <button
+            type="button"
+            onClick={() => setAccountOpen(true)}
+            className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-off-black/55 hover:text-gold transition-colors"
+          >
+            <Icon name="user" size={14} />
+            {isLoggedIn ? user!.name.split(" ")[0] : t("account")}
+          </button>
+          <span className="h-3 w-px bg-off-black/10" />
+          <Link
+            href="/wishlist"
+            className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-off-black/55 hover:text-pink-gold transition-colors"
+          >
+            <Icon name="heart" size={14} /> {t("wishlist")}
+          </Link>
+          <span className="h-3 w-px bg-off-black/10" />
+          <button
+            type="button"
+            onClick={openCart}
+            className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-off-black/55 hover:text-gold transition-colors"
+          >
+            <Icon name="cart" size={14} /> {t("cart")} ({totalItems})
+          </button>
         </div>
-      </div>
-      <div className="hidden lg:flex items-center text-[11px] tracking-wider uppercase text-off-black/60">
-        <button type="button" onClick={() => setAccountOpen(true)} className="px-2 py-1 hover:text-gold">
-          {t("account")}
-        </button>
-        <Link href="/wishlist" className="px-2 py-1 hover:text-gold">
-          {t("wishlist")}
-        </Link>
-        <button type="button" onClick={openCart} className="px-2 py-1 hover:text-gold">
-          {t("cart")}
-        </button>
       </div>
     </div>
   );

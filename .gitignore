@@ -7,3 +7,7 @@ dev-dist
 *.local
 .vercel
 next-env.d.ts
+tsconfig.tsbuildinfo
+.env
+.env.local
+/prisma/migrations/dev.db*

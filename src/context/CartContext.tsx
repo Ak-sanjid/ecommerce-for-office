@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { CartItem, Product } from "@/types";
-import { SAMPLE_MIN } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 
 interface CartContextType {
   items: CartItem[];
@@ -113,7 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const unit = i.product.flashSale?.price ?? i.product.price;
     return sum + unit * i.quantity;
   }, 0);
-  const canPickSamples = totalPrice >= SAMPLE_MIN;
+  const canPickSamples = totalPrice >= siteConfig.freeSampleThreshold;
 
   useEffect(() => {
     if (!canPickSamples && selectedSamples.length) setSelectedSamples([]);

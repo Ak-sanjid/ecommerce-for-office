@@ -95,6 +95,19 @@ export function HeroBanner() {
           <button key={s.id} type="button" aria-label={s.id} onClick={() => setI(idx)} className={`h-2 rounded-full transition-all ${idx === i ? "w-7 bg-gold" : "w-2 bg-off-black/20"}`} />
         ))}
       </div>
+      <div className="relative z-10 container-page grid grid-cols-2 sm:grid-cols-4 gap-3 pb-6">
+        {[
+          [t("authentic"), t("official")],
+          [t("cod"), t("districts")],
+          [t("easyReturn"), "bKash · Nagad · Rocket"],
+          [t("glowPoints"), lang === "bn" ? "প্রতি অর্ডারে পয়েন্ট" : "Points on every order"],
+        ].map(([a, b]) => (
+          <div key={a} className="rounded-xl border border-gold/20 bg-white/70 px-3 py-2.5 backdrop-blur">
+            <p className="text-[12px] font-semibold">{a}</p>
+            <p className="text-[10px] text-off-black/50">{b}</p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

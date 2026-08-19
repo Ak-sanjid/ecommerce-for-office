@@ -5,7 +5,11 @@ import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useLang } from "@/context/LangContext";
 import { samples } from "@/data/reviews";
-import { FREE_SHIP, deliveryCharge, estimatedDelivery, formatBdt, loc, productName } from "@/lib/utils";
+import { deliveryCharge, estimatedDelivery, loc, productName } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
+import { bdt } from "@/lib/format";
+import { slugify } from "@/data/products";
+import { Icon } from "@/components/shared/Icon";
 
 export function CartSlideOut() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, totalPrice, canPickSamples, selectedSamples, toggleSample } =
@@ -14,8 +18,9 @@ export function CartSlideOut() {
   const [inside, setInside] = useState(true);
   if (!isOpen) return null;
 
-  const ship = totalPrice >= FREE_SHIP ? 0 : deliveryCharge(inside);
-  const need = Math.max(0, FREE_SHIP - totalPrice);
+  const ship = totalPrice >= siteConfig.freeShippingThreshold ? 0 : deliveryCharge(inside);
+  const need = Math.max(0, siteConfig.freeShippingThreshold - totalPrice);
+  const sampleNeed = Math.max(0, siteConfig.freeSampleThreshold - totalPrice);
 
   return (
     <>
@@ -44,10 +49,10 @@ export function CartSlideOut() {
                 <img src={product.image} alt="" className="w-[72px] h-[72px] object-cover" />
                 <div>
                   <div className="text-[10px] tracking-widest uppercase text-gold-dark">{product.brand}</div>
-                  <Link href={`/product/${product.id}`} onClick={closeCart} className="text-sm">
+                  <Link href={`/product/${slugify(product.name)}`} onClick={closeCart} className="text-sm">
                     {productName(product, lang)}
                   </Link>
-                  <div className="text-sm mt-1">{formatBdt(product.flashSale?.price ?? product.price)}</div>
+                  <div className="text-sm mt-1">{bdt(product.flashSale?.price ?? product.price)}</div>
                   <div className="inline-flex items-center border border-gold/30 rounded-full h-7 mt-2">
                     <button type="button" className="w-7" onClick={() => updateQuantity(product.id, quantity - 1)}>
                       −
@@ -68,7 +73,13 @@ export function CartSlideOut() {
           {items.length > 0 && (
             <div className="mt-4 p-3 bg-cream border border-dashed border-gold">
               <strong className="text-sm">{t("samples")}</strong>
-              <p className="text-xs mt-1 text-off-black/60">{canPickSamples ? t("samples") : t("samplesHint")}</p>
+              <p className="text-xs mt-1 text-off-black/60">
+                {canPickSamples
+                  ? t("samples")
+                  : lang === "bn"
+                    ? `${bdt(sampleNeed)} আর খরচ করলে ২টি ফ্রি স্যাম্পল`
+                    : `Spend ${bdt(sampleNeed)} more to unlock 2 free samples`}
+              </p>
               {canPickSamples && (
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {samples.map((s) => (
@@ -100,17 +111,19 @@ export function CartSlideOut() {
             <p className="text-xs text-off-black/60">
               {t("eta")}: {estimatedDelivery(inside)}
             </p>
-            <p className="text-xs my-2">{need === 0 ? t("freeShip") : lang === "bn" ? `ফ্রি ডেলিভারির জন্য আরও ${formatBdt(need)}` : `Add ${formatBdt(need)} more for free delivery`}</p>
+            <p className="text-xs my-2">
+              {need === 0 ? t("freeShip") : lang === "bn" ? `ফ্রি ডেলিভারির জন্য আরও ${bdt(need)}` : `Add ${bdt(need)} more for free delivery`}
+            </p>
             <div className="flex justify-between text-sm mb-1">
               <span>{t("subtotal")}</span>
-              <strong>{formatBdt(totalPrice)}</strong>
+              <strong>{bdt(totalPrice)}</strong>
             </div>
             <div className="flex justify-between text-sm mb-3">
               <span>{t("delivery")}</span>
-              <strong>{ship === 0 ? (lang === "bn" ? "ফ্রি" : "Free") : formatBdt(ship)}</strong>
+              <strong>{ship === 0 ? (lang === "bn" ? "ফ্রি" : "Free") : bdt(ship)}</strong>
             </div>
             <Link href="/checkout" onClick={closeCart} className="btn-ink w-full">
-              {t("checkout")} · {formatBdt(totalPrice + ship)}
+              {t("checkout")} · {bdt(totalPrice + ship)}
             </Link>
             <p className="text-xs text-off-black/60 mt-2">{t("guestNote")}</p>
           </div>

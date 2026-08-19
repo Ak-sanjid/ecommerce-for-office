@@ -1,39 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { siteConfig } from "@/config/site";
 import { useLang } from "@/context/LangContext";
 
-const keys = ["promo1", "promo2", "promo3"] as const;
-
-export function PromoStrip({ onToggleLayout }: { onToggleLayout: () => void }) {
-  const { lang, setLang, t } = useLang();
+export function PromoStrip() {
+  const { enabled, autoRotate, intervalMs, messages } = siteConfig.promoStrip;
+  const { lang } = useLang();
   const [i, setI] = useState(0);
 
   useEffect(() => {
-    const id = window.setInterval(() => setI((n) => (n + 1) % keys.length), 4200);
-    return () => window.clearInterval(id);
-  }, []);
+    if (!enabled || !autoRotate || messages.length < 2) return;
+    const t = setInterval(() => setI((v) => (v + 1) % messages.length), intervalMs);
+    return () => clearInterval(t);
+  }, [enabled, autoRotate, intervalMs, messages.length]);
+
+  if (!enabled) return null;
 
   return (
-    <div className="relative h-8 bg-off-black text-gold-light text-[11px] sm:text-xs tracking-wide">
-      <div className="container-page h-full flex items-center justify-center">
-        <p className="truncate pr-16">{t(keys[i])}</p>
-      </div>
-      <div className="absolute right-3 top-0 h-full flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onToggleLayout}
-          className="hidden sm:inline text-[10px] tracking-widest uppercase text-gold-light/70 hover:text-gold-light"
-        >
-          Layout
-        </button>
-        <button
-          type="button"
-          onClick={() => setLang(lang === "en" ? "bn" : "en")}
-          className="text-[11px] tracking-[0.16em] uppercase text-gold-light"
-        >
-          {t("language")}
-        </button>
+    <div className="bg-gradient-to-r from-gold-light/25 via-pink-gold/15 to-gold-light/25">
+      <div className="container-page flex h-9 items-center justify-center">
+        <p key={i} className="text-center text-[12px] font-medium text-gold-dark">
+          {lang === "bn" ? messages[i].bn : messages[i].en}
+        </p>
       </div>
     </div>
   );
