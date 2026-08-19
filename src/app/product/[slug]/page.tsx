@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { alternateBrands, getProduct, related } from "@/lib/catalog";
+import { alternateBrands, related } from "@/lib/catalog";
+import { getProductDB } from "@/lib/catalog-db";
 import { reviews } from "@/data/reviews";
 import { products, slugify } from "@/data/products";
 import { ProductGallery } from "@/components/pdp/ProductGallery";
@@ -20,8 +21,8 @@ export function generateStaticParams() {
   return products.flatMap((p) => [{ slug: slugify(p.name) }, { slug: p.id }]);
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const p = getProduct(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const p = await getProductDB(params.slug);
   if (!p) return { title: "Product" };
   return {
     title: `${p.name} — ${p.brand}`,
@@ -30,8 +31,8 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function ProductPage({ params }: Props) {
-  const p = getProduct(params.slug);
+export default async function ProductPage({ params }: Props) {
+  const p = await getProductDB(params.slug);
   if (!p) notFound();
 
   const rel = related(p);
@@ -40,7 +41,7 @@ export default function ProductPage({ params }: Props) {
 
   return (
     <div className="bg-cream pb-20">
-      <TrackView id={p.id} />
+      <TrackView id={p.id} price={p.flashSale?.price ?? p.price} />
       <div className="container-page grid gap-10 py-8 lg:grid-cols-2">
         <ProductGallery product={p} />
         <ProductInfo product={p} />

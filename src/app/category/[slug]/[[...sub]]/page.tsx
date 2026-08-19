@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ListingShell } from "@/components/listing/ListingShell";
-import { filterProducts, parseListParam } from "@/lib/catalog";
+import { parseListParam } from "@/lib/catalog";
+import { filterProductsDB } from "@/lib/catalog-db";
 import { mainCategories } from "@/data/categories";
 
 type Props = {
@@ -17,10 +18,10 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function CategoryPage({ params, searchParams }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   const sub = params.sub?.[0];
   const cat = mainCategories.find((c) => c.slug === params.slug);
-  const items = filterProducts({
+  const items = await filterProductsDB({
     category: params.slug,
     sub,
     brand: typeof searchParams.brand === "string" ? searchParams.brand : undefined,

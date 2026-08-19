@@ -6,7 +6,8 @@ Next.js 14 (App Router) · TypeScript · Tailwind · PWA · Prisma schema ready
 
 ```bash
 npm install
-cp .env.example .env
+cp .env.example .env.local
+# set ADMIN_PASSWORD (sandbox default: glow-admin)
 npm run dev          # http://0.0.0.0:3000
 ```
 
@@ -32,9 +33,28 @@ Demo WhatsApp: `+880 1700-000000`. English first, বাংলা toggle in the 
 ```bash
 npm run db:seed          # seeds data/glow-store.json (no Postgres required)
 # optional, when DATABASE_URL points at Postgres:
-# npx prisma migrate dev --name phase3
+# npx prisma migrate dev --name phase4
 ```
 
-Open `/admin` for layout, promo, coupons (GLOW10 / FLASH30), inventory log, affiliate clicks, pixels, abandoned-cart recovery.
+## Phase 4 — Auth, orders, integrations
 
-Checkout accepts `GLOW10` and `FLASH30`. Landing with `/?ref=emily` increments affiliate clicks.
+`/admin` is gated with a signed HMAC cookie (`glow_admin`, 8h). Write APIs return **401** without it.
+
+Default sandbox password: `glow-admin` (set `ADMIN_PASSWORD` in `.env.local`).
+
+Checkout `POST /api/checkout` persists an order, decrements stock, writes an inventory log, increments coupon usage and Glow Points. Without live Postgres this lands in `data/glow-store.json`; with `DATABASE_URL` the same path uses a Prisma `$transaction`.
+
+| Route | Role |
+|---|---|
+| `POST /admin/api/login` | Set admin cookie |
+| `POST /admin/api/update` | Protected writes |
+| `POST /api/checkout` | Order + stock + loyalty |
+| `POST /api/coupon` | Validate GLOW10 / FLASH30 |
+| `POST /api/otp` | Rate-limited BD OTP (dry-run) |
+| `POST /api/notify` | Restock WhatsApp alert |
+| `GET /api/reviews` | Facebook Graph or seed |
+| `POST /api/orders/:id/status` | Status + WhatsApp |
+| `POST /api/webhook/whatsapp` | Inbound verify + log |
+| `?ref=emily` | `glow_ref` cookie, 30 days |
+
+Payment helpers (`src/lib/payments.ts`) are signature-ready for bKash / Nagad / Rocket and dry-run when keys are empty.

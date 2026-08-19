@@ -44,6 +44,71 @@ export type AffiliateRow = {
   isActive: boolean;
 };
 
+export type OrderItemRow = {
+  id: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "PACKED"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "RETURNED";
+
+export type PaymentMethod = "BKASH" | "NAGAD" | "ROCKET" | "COD" | "CARD";
+export type Zone = "INSIDE_DHAKA" | "OUTSIDE_DHAKA";
+
+export type OrderRow = {
+  id: string;
+  orderNumber: string;
+  userId?: string | null;
+  guestName?: string | null;
+  guestPhone?: string | null;
+  guestAddress?: string | null;
+  zone: Zone;
+  deliveryFee: number;
+  subtotal: number;
+  discount: number;
+  total: number;
+  couponCode?: string | null;
+  paymentMethod: PaymentMethod;
+  paymentId?: string | null;
+  paymentStatus?: string | null;
+  status: OrderStatus;
+  phoneVerified: boolean;
+  estDelivery: string;
+  smsSent: boolean;
+  whatsappSent: boolean;
+  items: OrderItemRow[];
+  createdAt: string;
+};
+
+export type RestockAlertRow = {
+  id: string;
+  productId: string;
+  phone: string;
+  notified: boolean;
+  createdAt: string;
+};
+
+export type UserRow = {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  glowPoints: number;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderAt?: string;
+  referredBy?: string;
+  createdAt: string;
+};
+
 export type StoreShape = {
   siteConfig: Record<string, unknown>;
   coupons: CouponRow[];
@@ -52,6 +117,9 @@ export type StoreShape = {
   affiliates: AffiliateRow[];
   stock: Record<string, number>;
   recoveryEnabled: boolean;
+  orders: OrderRow[];
+  restockAlerts: RestockAlertRow[];
+  users: UserRow[];
 };
 
 const STORE_PATH = join(process.cwd(), "data", "glow-store.json");
@@ -132,13 +200,31 @@ function defaults(): StoreShape {
     ],
     stock: Object.fromEntries(products.map((p) => [p.id, p.stock])),
     recoveryEnabled: false,
+    orders: [],
+    restockAlerts: [],
+    users: [],
   };
 }
 
 export function readStore(): StoreShape {
   try {
     const raw = readFileSync(STORE_PATH, "utf8");
-    return { ...defaults(), ...(JSON.parse(raw) as StoreShape) };
+    const parsed = JSON.parse(raw) as Partial<StoreShape>;
+    const seed = defaults();
+    return {
+      ...seed,
+      ...parsed,
+      siteConfig: { ...seed.siteConfig, ...(parsed.siteConfig ?? {}) },
+      coupons: parsed.coupons ?? seed.coupons,
+      inventoryLogs: parsed.inventoryLogs ?? [],
+      abandoned: parsed.abandoned ?? [],
+      affiliates: parsed.affiliates ?? seed.affiliates,
+      stock: { ...seed.stock, ...(parsed.stock ?? {}) },
+      recoveryEnabled: parsed.recoveryEnabled ?? false,
+      orders: parsed.orders ?? [],
+      restockAlerts: parsed.restockAlerts ?? [],
+      users: parsed.users ?? [],
+    };
   } catch {
     const seed = defaults();
     writeStore(seed);

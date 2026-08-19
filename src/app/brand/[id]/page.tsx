@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { brands } from "@/data/brands";
-import { filterProducts } from "@/lib/catalog";
+import { filterProductsDB } from "@/lib/catalog-db";
 import { ProductGrid } from "@/components/listing/ProductGrid";
 import { Suspense } from "react";
 
-export default function BrandPage({ params }: { params: { id: string } }) {
+export default async function BrandPage({ params }: { params: { id: string } }) {
   const brand = brands.find((b) => b.id === params.id);
   if (!brand) notFound();
-  const items = filterProducts({ brand: brand.id });
+  const items = await filterProductsDB({ brand: brand.id });
 
   return (
     <div>

@@ -40,23 +40,45 @@ export function AccountModal() {
             <h2 className="font-display text-3xl mt-2">{t("loginTitle")}</h2>
             <p className="text-off-black/60 mt-2 text-sm">{t("loginSub")}</p>
             <div className="grid gap-2 my-4">
-              <button type="button" className="btn-ink w-full" onClick={() => login("Ayesha Rahman", { email: "ayesha@gmail.com" })}>
+              <button type="button" className="btn-ink w-full" onClick={() => void login("Ayesha Rahman", { email: "ayesha@gmail.com" })}>
                 {t("continueGoogle")}
               </button>
-              <button type="button" className="btn-secondary w-full" onClick={() => login("Nusrat Karim")}>
+              <button type="button" className="btn-secondary w-full" onClick={() => void login("Nusrat Karim")}>
                 {t("continueFb")}
               </button>
             </div>
             <label className="block text-[11px] tracking-widest uppercase text-gold-dark mb-1">{t("phone")}</label>
             <input className="input-field mb-3" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01XXXXXXXXX" />
             {!otpSent ? (
-              <button type="button" className="btn-primary w-full" onClick={() => setOtpSent(true)}>
+              <button
+                type="button"
+                className="btn-primary w-full"
+                onClick={async () => {
+                  await fetch("/api/otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone }),
+                  });
+                  setOtpSent(true);
+                }}
+              >
                 {t("sendOtp")}
               </button>
             ) : (
               <>
-                <input className="input-field mb-3" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="1234" />
-                <button type="button" className="btn-primary w-full" onClick={() => login(phone || "Guest", { phone })}>
+                <input className="input-field mb-3" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" />
+                <button
+                  type="button"
+                  className="btn-primary w-full"
+                  onClick={async () => {
+                    const res = await fetch("/api/otp", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ phone, code: otp }),
+                    });
+                    if (res.ok) await login(phone || "Guest", { phone });
+                  }}
+                >
                   {t("verify")}
                 </button>
               </>
@@ -68,7 +90,7 @@ export function AccountModal() {
             </div>
             <input className="input-field mb-2" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("name")} />
             <input className="input-field mb-3" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("email")} />
-            <button type="button" className="btn-ink w-full" onClick={() => login(name || "Guest", { email, phone })}>
+            <button type="button" className="btn-ink w-full" onClick={() => void login(name || "Guest", { email, phone })}>
               {t("enter")}
             </button>
           </>

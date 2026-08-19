@@ -1,8 +1,9 @@
 import { ListingShell } from "@/components/listing/ListingShell";
-import { filterProducts, parseListParam } from "@/lib/catalog";
+import { parseListParam } from "@/lib/catalog";
+import { filterProductsDB } from "@/lib/catalog-db";
 import { concerns } from "@/data/categories";
 
-export default function ConcernPage({
+export default async function ConcernPage({
   params,
   searchParams,
 }: {
@@ -10,7 +11,7 @@ export default function ConcernPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const label = concerns.find((c) => c.id === params.id);
-  const items = filterProducts({
+  const items = await filterProductsDB({
     concern: params.id,
     brand: typeof searchParams.brand === "string" ? searchParams.brand : undefined,
     min: searchParams.min ? Number(searchParams.min) : undefined,

@@ -1,5 +1,6 @@
 import { ListingShell } from "@/components/listing/ListingShell";
-import { filterProducts, parseListParam } from "@/lib/catalog";
+import { parseListParam } from "@/lib/catalog";
+import { filterProductsDB } from "@/lib/catalog-db";
 
 const titles: Record<string, string> = {
   "k-beauty": "K-Beauty",
@@ -10,14 +11,14 @@ const titles: Record<string, string> = {
   "todays-offer": "Today's Offer",
 };
 
-export default function CollectionPage({
+export default async function CollectionPage({
   params,
   searchParams,
 }: {
   params: { slug: string };
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const items = filterProducts({
+  const items = await filterProductsDB({
     collection: params.slug,
     brand: typeof searchParams.brand === "string" ? searchParams.brand : undefined,
     min: searchParams.min ? Number(searchParams.min) : undefined,

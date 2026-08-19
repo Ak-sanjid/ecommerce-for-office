@@ -11,8 +11,8 @@ export default function LoginPage() {
   const { t } = useLang();
   const [tab, setTab] = useState<"social" | "otp" | "form">("social");
 
-  const go = (name: string, extra?: { email?: string; phone?: string }) => {
-    login(name, extra);
+  const go = async (name: string, extra?: { email?: string; phone?: string }) => {
+    await login(name, extra);
     router.push("/");
   };
 

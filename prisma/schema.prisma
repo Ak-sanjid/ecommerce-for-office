@@ -36,6 +36,7 @@ model Product {
   reviews       Review[]
   orderItems    OrderItem[]
   inventoryLogs InventoryLog[]
+  restockAlerts RestockAlert[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
@@ -127,6 +128,7 @@ model Order {
   userId        String?
   guestName     String?
   guestPhone    String?
+  guestAddress  String?
   zone          Zone
   deliveryFee   Int
   subtotal      Int
@@ -292,4 +294,22 @@ enum ReviewSource {
 enum DiscountType {
   PERCENT
   FIXED
+}
+
+model RestockAlert {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  phone     String
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId, notified])
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

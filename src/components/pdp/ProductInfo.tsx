@@ -13,8 +13,23 @@ import { slugify } from "@/data/products";
 export function ProductInfo({ product }: { product: Product }) {
   const { addItem, toggleWish, wishlist, notifyRestock, alerts } = useCart();
   const { lang, t } = useLang();
+  const [notifyPhone, setNotifyPhone] = useState("");
+  const [notifyMsg, setNotifyMsg] = useState("");
   const price = product.flashSale?.price ?? product.price;
   const share = encodeURIComponent(`https://glowbeauty.com.bd/product/${slugify(product.name)}`);
+
+  const submitNotify = async () => {
+    const res = await fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: product.id, phone: notifyPhone }),
+    });
+    const j = (await res.json()) as { ok: boolean; message?: string; error?: string };
+    if (j.ok) {
+      notifyRestock(product.id);
+      setNotifyMsg(j.message ?? t("notifySet"));
+    } else setNotifyMsg(j.error ?? "Could not save alert");
+  };
 
   return (
     <div>

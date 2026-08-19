@@ -1,8 +1,14 @@
 import { getProduct as findProduct, products, slugify } from "@/data/products";
 import type { Product } from "@/types";
+import { getStock } from "./inventory";
+
+export function withLiveStock(p: Product): Product {
+  return { ...p, stock: getStock(p.id).stock };
+}
 
 export function getProduct(idOrSlug: string) {
-  return findProduct(idOrSlug);
+  const p = findProduct(idOrSlug);
+  return p ? withLiveStock(p) : undefined;
 }
 
 export function productHref(p: Product) {
@@ -81,6 +87,8 @@ export function filterProducts(opts: {
   if (opts.badges?.length) {
     list = list.filter((p) => opts.badges!.every((b) => p.badges.includes(b)));
   }
+
+  list = list.map(withLiveStock);
 
   switch (opts.sort) {
     case "price-asc":

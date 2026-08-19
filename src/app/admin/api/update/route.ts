@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { verifyAdminToken, ADMIN_COOKIE } from "@/lib/adminAuth";
 import { setSiteConfig } from "@/lib/admin";
 import { applyUsage, upsertCoupon, validateCoupon } from "@/lib/coupons";
 import { logStockChange } from "@/lib/inventory";
 import { recoverAbandoned, saveAbandoned, setRecoveryEnabled } from "@/lib/abandoned";
 import { registerConversion, trackClick, upsertAffiliate } from "@/lib/referral";
+import { updateOrderStatus } from "@/lib/orders";
+import type { OrderStatus } from "@/lib/jsonStore";
 
 export async function POST(req: Request) {
+  const token = cookies().get(ADMIN_COOKIE)?.value;
+  if (!verifyAdminToken(token)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = (await req.json()) as { key: string; value: unknown };
     const { key, value } = body;
+    if (typeof key !== "string") {
+      return NextResponse.json({ ok: false, error: "bad payload" }, { status: 400 });
+    }
 
     if (key === "coupon_validate") {
       const v = value as { code: string; subtotal: number };
@@ -24,7 +36,7 @@ export async function POST(req: Request) {
     }
     if (key === "stock_change") {
       const v = value as { productId: string; change: number; reason: string; batchNo?: string };
-      logStockChange(v.productId, v.change, v.reason, v.batchNo);
+      await logStockChange(v.productId, v.change, v.reason, v.batchNo);
       return NextResponse.json({ ok: true });
     }
     if (key === "abandoned_save") {
@@ -53,8 +65,16 @@ export async function POST(req: Request) {
       upsertAffiliate(value as Parameters<typeof upsertAffiliate>[0]);
       return NextResponse.json({ ok: true });
     }
+    if (key === "order_status") {
+      const v = value as { id: string; status: OrderStatus };
+      const row = await updateOrderStatus(v.id, v.status);
+      return NextResponse.json({ ok: Boolean(row), result: row });
+    }
 
-    setSiteConfig(key, value);
+    if (typeof value !== "object" && typeof value !== "string" && typeof value !== "boolean") {
+      return NextResponse.json({ ok: false, error: "bad payload" }, { status: 400 });
+    }
+    await setSiteConfig(key, value);
     return NextResponse.json({ ok: true, key });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });

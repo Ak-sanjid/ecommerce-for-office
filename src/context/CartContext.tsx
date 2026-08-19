@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { CartItem, Product } from "@/types";
 import { siteConfig } from "@/config/site";
+import { track } from "@/lib/track";
 
 interface CartContextType {
   items: CartItem[];
@@ -70,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { product, quantity: qty }];
     });
+    track("addToCart", { content_ids: [product.id], value: product.flashSale?.price ?? product.price, currency: "BDT" });
     setIsOpen(true);
   }, []);
 
@@ -97,7 +99,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleWish = useCallback((id: string) => {
-    setWishlist((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setWishlist((prev) => {
+      const adding = !prev.includes(id);
+      if (adding) track("addWishlist", { content_ids: [id] });
+      return adding ? [...prev, id] : prev.filter((x) => x !== id);
+    });
   }, []);
 
   const viewProduct = useCallback((id: string) => {

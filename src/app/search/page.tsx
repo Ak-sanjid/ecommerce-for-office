@@ -1,15 +1,16 @@
 import { Suspense } from "react";
 import { FilterPanel } from "@/components/listing/FilterPanel";
 import { ProductGrid } from "@/components/listing/ProductGrid";
-import { filterProducts, parseListParam } from "@/lib/catalog";
+import { parseListParam } from "@/lib/catalog";
+import { filterProductsDB } from "@/lib/catalog-db";
 
-export default function SearchPage({
+export default async function SearchPage({
   searchParams,
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const q = typeof searchParams.q === "string" ? searchParams.q : "";
-  const items = filterProducts({
+  const items = await filterProductsDB({
     q,
     brand: typeof searchParams.brand === "string" ? searchParams.brand : undefined,
     min: searchParams.min ? Number(searchParams.min) : undefined,

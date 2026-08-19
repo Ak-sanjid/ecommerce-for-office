@@ -31,10 +31,10 @@ export function captureReferral() {
   if (ref) {
     sessionStorage.setItem("glow-ref", ref);
     track("referral_land", { ref });
-    fetch("/admin/api/update", {
+    fetch("/api/ref", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: "ref_click", value: ref }),
+      body: JSON.stringify({ slug: ref }),
     }).catch(() => undefined);
   }
 }

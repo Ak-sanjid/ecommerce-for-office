@@ -8,7 +8,7 @@
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:migrate": "npx prisma migrate dev --name phase3"
+    "db:migrate": "npx prisma migrate dev --name phase4"
   },
   "dependencies": {
     "clsx": "^2.1.1",

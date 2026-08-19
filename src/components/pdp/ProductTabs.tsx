@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Product, Review } from "@/types";
 import { Icon } from "@/components/shared/Icon";
 import { useLang } from "@/context/LangContext";
@@ -9,6 +9,16 @@ import { loc } from "@/lib/utils";
 export function ProductTabs({ product, reviews }: { product: Product; reviews: Review[] }) {
   const { lang, t } = useLang();
   const [tab, setTab] = useState<"desc" | "qa" | "reviews">("desc");
+  const [live, setLive] = useState<Review[]>(reviews);
+
+  useEffect(() => {
+    fetch(`/api/reviews?product=${product.id}`)
+      .then((r) => r.json())
+      .then((j: { reviews?: Review[] }) => {
+        if (j.reviews?.length) setLive(j.reviews);
+      })
+      .catch(() => undefined);
+  }, [product.id]);
 
   return (
     <div className="rounded-3xl bg-white p-6 shadow-card">
@@ -67,8 +77,10 @@ export function ProductTabs({ product, reviews }: { product: Product; reviews: R
 
       {tab === "reviews" && (
         <div className="mt-5 space-y-4">
-          {reviews.length === 0 && <p className="text-sm text-review-grey">{lang === "bn" ? "এই এসকিউতে এখনো রিভিউ নেই।" : "No reviews yet for this SKU."}</p>}
-          {reviews.map((r) => (
+          {live.length === 0 && (
+            <p className="text-sm text-review-grey">{lang === "bn" ? "এই এসকিউতে এখনো রিভিউ নেই।" : "No reviews yet for this SKU."}</p>
+          )}
+          {live.map((r) => (
             <article key={r.id} className="border-b border-review-grey/15 pb-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{r.author}</span>
@@ -81,7 +93,7 @@ export function ProductTabs({ product, reviews }: { product: Product; reviews: R
                   <Icon key={i} name="star" size={11} filled className={i < r.rating ? "text-gold" : "text-review-grey/25"} />
                 ))}
               </div>
-              <p className="mt-2 text-[13px] text-review-grey">{loc(r.text, r.textBn, lang)}</p>
+              <p className="mt-2 text-[13px] text-review-grey">{loc(r.text, r.textBn ?? r.text, lang)}</p>
             </article>
           ))}
         </div>

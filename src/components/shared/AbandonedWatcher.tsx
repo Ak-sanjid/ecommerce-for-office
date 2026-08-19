@@ -17,10 +17,10 @@ export function AbandonedWatcher() {
     if (path !== "/checkout") return;
     last.current = key;
     const t = window.setTimeout(() => {
-      fetch("/admin/api/update", {
+      fetch("/api/abandoned", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "abandoned_save", value: { items: payload } }),
+        body: JSON.stringify({ items: payload }),
       }).catch(() => undefined);
     }, 8000);
     return () => window.clearTimeout(t);

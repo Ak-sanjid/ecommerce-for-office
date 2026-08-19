@@ -6,7 +6,7 @@ import type { User } from "@/types";
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  login: (name: string, extra?: { email?: string; phone?: string }) => void;
+  login: (name: string, extra?: { email?: string; phone?: string }) => Promise<void>;
   logout: () => void;
   accountOpen: boolean;
   setAccountOpen: (v: boolean) => void;
@@ -27,8 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (name: string, extra?: { email?: string; phone?: string }) => {
-    const next: User = { name, email: extra?.email, phone: extra?.phone, glowPoints: 120 };
+  const login = async (name: string, extra?: { email?: string; phone?: string }) => {
+    let next: User = { name, email: extra?.email, phone: extra?.phone, glowPoints: 0 };
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email: extra?.email, phone: extra?.phone }),
+      });
+      const j = (await res.json()) as { ok: boolean; user?: { id: string; glowPoints: number } };
+      if (j.ok && j.user) next = { ...next, id: j.user.id, glowPoints: j.user.glowPoints };
+    } catch {
+      /* offline demo */
+    }
     setUser(next);
     localStorage.setItem("glow-user", JSON.stringify(next));
     setAccountOpen(false);

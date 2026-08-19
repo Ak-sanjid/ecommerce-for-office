@@ -46,6 +46,9 @@ async function main() {
     affiliates: [{ influencerName: "Emily", linkSlug: "emily", urlTarget: "/collection/k-beauty?ref=emily", clicks: 0, conversions: 0, isActive: true }],
     stock: {},
     recoveryEnabled: false,
+    orders: [],
+    restockAlerts: [],
+    users: [],
   };
   mkdirSync(join(process.cwd(), "data"), { recursive: true });
   writeFileSync(join(process.cwd(), "data", "glow-store.json"), JSON.stringify(store, null, 2));
