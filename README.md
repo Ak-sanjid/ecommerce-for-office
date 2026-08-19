@@ -1,16 +1,14 @@
-# KÁNTI — Authentic Beauty, Bangladesh
+# GLOW — Premium Beauty & Personal Care, Bangladesh
 
-Premium beauty & personal care e-commerce for the Bangladesh market.
-
-Cream, ivory and light gold. Off-black `#2B2B2B`. Grey appears only in customer reviews.
-
-## Run
+Next.js 14 + Tailwind. Cream, ivory and light gold. Off-black `#2B2B2B`. Grey only in reviews.
 
 ```bash
 npm install
 npm run dev
 ```
 
-PWA-capable (`Add to Home Screen`). English first, full বাংলা toggle in the header.
+Opens on `0.0.0.0:3000`. English first, full বাংলা toggle in the promo strip.
 
-Demo WhatsApp: `+880 1700-000000`. OTP on login/COD accepts any 4 digits in this prototype.
+Demo WhatsApp: `+880 1700-000000`.
+
+Header layout A/B is toggleable from the promo strip (**Layout**).

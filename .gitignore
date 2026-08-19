@@ -1,8 +1,9 @@
 node_modules
+.next
+out
 dist
 dev-dist
 .DS_Store
 *.local
-.vite
-.vscode
-.idea
+.vercel
+next-env.d.ts
