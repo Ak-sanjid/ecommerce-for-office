@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { flashSaleProducts, products, todaysOffer, topSelling } from "@/data/products";
 import { brands } from "@/data/brands";
 import { concerns } from "@/data/categories";
@@ -9,9 +8,11 @@ import { reels, reviews } from "@/data/reviews";
 import { useCart } from "@/context/CartContext";
 import { useLang } from "@/context/LangContext";
 import { useQuiz } from "@/context/QuizContext";
-import { FLASH_ENDS, loc, productName } from "@/lib/utils";
+import { FLASH_ENDS, loc } from "@/lib/utils";
 import { ProductCard } from "@/components/product/ProductCard";
 import { DragRail } from "./DragRail";
+import { useCountdown } from "@/hooks/useCountdown";
+import { pad } from "@/lib/format";
 
 function SectionHead({ kicker, title, href, link }: { kicker: string; title: string; href?: string; link?: string }) {
   return (
@@ -30,18 +31,13 @@ function SectionHead({ kicker, title, href, link }: { kicker: string; title: str
 }
 
 export function FlashSale() {
-  const { lang, t } = useLang();
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-  const s = Math.max(0, Math.floor((new Date(FLASH_ENDS).getTime() - now) / 1000));
+  const { t } = useLang();
+  const clock = useCountdown(FLASH_ENDS);
   const parts = [
-    [Math.floor(s / 86400), t("days")],
-    [Math.floor((s % 86400) / 3600), t("hours")],
-    [Math.floor((s % 3600) / 60), t("mins")],
-    [s % 60, t("secs")],
+    [clock?.d ?? 0, t("days")],
+    [clock?.h ?? 0, t("hours")],
+    [clock?.m ?? 0, t("mins")],
+    [clock?.s ?? 0, t("secs")],
   ] as const;
 
   return (
@@ -51,10 +47,14 @@ export function FlashSale() {
           <div className="kicker">{t("flash")}</div>
           <h2 className="section-title">{t("flashSub")}</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2" suppressHydrationWarning>
           {parts.map(([n, label]) => (
-            <b key={label} className="min-w-[58px] grid place-items-center bg-off-black text-gold-light font-display text-2xl px-2 py-2 leading-none">
-              {String(n).padStart(2, "0")}
+            <b
+              key={label}
+              className="min-w-[58px] grid place-items-center bg-off-black text-gold-light font-display text-2xl px-2 py-2 leading-none"
+              suppressHydrationWarning
+            >
+              {clock ? pad(n) : "––"}
               <small className="font-body text-[9px] tracking-widest uppercase font-normal mt-1">{label}</small>
             </b>
           ))}
@@ -162,7 +162,9 @@ export function ShoppableReels() {
           return (
             <article key={r.id} className="relative w-[220px] h-[360px] rounded-2xl overflow-hidden">
               <img src={r.image} alt="" className="w-full h-full object-cover" loading="lazy" />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-off-black/30 grid place-items-center text-white">▶</span>
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-off-black/30 grid place-items-center text-white">
+                ▶
+              </span>
               <div className="absolute inset-x-0 bottom-0 p-4 pt-10 bg-gradient-to-t from-off-black/70 to-transparent text-white">
                 <h3 className="font-display text-xl mb-2">{loc(r.title, r.titleBn, lang)}</h3>
                 {p && (
@@ -194,9 +196,7 @@ export function RecommendedForYou() {
           <ProductCard key={p.id} product={p} />
         ))}
       </DragRail>
-      {recently.length > 0 && (
-        <p className="sr-only">{lang === "bn" ? "সম্প্রতি দেখা" : "Recently viewed used"}</p>
-      )}
+      {recently.length > 0 && <p className="sr-only">{lang === "bn" ? "সম্প্রতি দেখা" : "Recently viewed used"}</p>}
     </section>
   );
 }
@@ -215,7 +215,9 @@ export function CustomerReviews() {
                 <strong className="text-off-black">{r.author}</strong>
                 <div>{lang === "bn" ? r.cityBn : r.city}</div>
               </div>
-              <span className="text-[10px] tracking-widest uppercase">{r.source === "facebook" ? "Facebook" : lang === "bn" ? "ছবি রিভিউ" : "Photo review"}</span>
+              <span className="text-[10px] tracking-widest uppercase">
+                {r.source === "facebook" ? "Facebook" : lang === "bn" ? "ছবি রিভিউ" : "Photo review"}
+              </span>
             </footer>
           </article>
         ))}
