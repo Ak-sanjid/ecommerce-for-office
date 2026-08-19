@@ -7,6 +7,9 @@ import { AIChatBubble } from "@/components/chat/AIChatBubble";
 import { CartSlideOut } from "@/components/cart/CartSlideOut";
 import { AccountModal } from "@/components/header/AccountModal";
 import { SkinQuiz } from "@/components/home/SkinQuiz";
+import { AnalyticsScripts } from "@/components/AnalyticsScripts";
+import { ReferralCapture } from "@/components/shared/ReferralCapture";
+import { AbandonedWatcher } from "@/components/shared/AbandonedWatcher";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://glowbeauty.com.bd"),
@@ -38,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Hind+Siliguri:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap"
           rel="stylesheet"
         />
+        <AnalyticsScripts />
       </head>
       <body className="font-body bg-cream text-off-black antialiased">
         <Providers>
@@ -48,6 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AccountModal />
           <SkinQuiz />
           <AIChatBubble />
+          <ReferralCapture />
+          <AbandonedWatcher />
         </Providers>
         <script
           dangerouslySetInnerHTML={{

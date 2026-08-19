@@ -15,8 +15,12 @@ export default function CheckoutPage() {
   const [pay, setPay] = useState<"bkash" | "nagad" | "rocket" | "cod">("bkash");
   const [otp, setOtp] = useState(false);
   const [done, setDone] = useState(false);
+  const [code, setCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState("");
   const fee = zone === "in" ? 60 : 120;
   const ship = totalPrice >= siteConfig.freeShippingThreshold ? 0 : fee;
+  const payable = Math.max(0, totalPrice - discount);
   const eta = zone === "in" ? (lang === "bn" ? "কাল–২ দিন" : "Tomorrow – 2 days") : lang === "bn" ? "২–৪ দিন" : "2–4 days";
 
   if (done) {
@@ -113,7 +117,22 @@ export default function CheckoutPage() {
           <button
             type="button"
             disabled={items.length === 0 || (pay === "cod" && !otp)}
-            onClick={() => {
+            onClick={async () => {
+              if (discount > 0 && code) {
+                await fetch("/admin/api/update", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ key: "coupon_apply", value: { code } }),
+                });
+              }
+              const ref = sessionStorage.getItem("glow-ref");
+              if (ref) {
+                await fetch("/admin/api/update", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ key: "ref_convert", value: ref }),
+                });
+              }
               clearCart();
               setDone(true);
             }}

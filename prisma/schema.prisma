@@ -35,10 +35,11 @@ model Product {
   badges        Badge[]
   reviews       Review[]
   orderItems    OrderItem[]
+  inventoryLogs InventoryLog[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
-  @@index([brandId, categoryId])
+  @@index([brandId, categoryId, stock])
 }
 
 model Brand {
@@ -62,15 +63,15 @@ model Category {
   icon     String?
   order    Int        @default(0)
   visible  Boolean    @default(true)
-  parent   Category?  @relation("Tree", fields: [parentId], references: [id])
   parentId String?
+  parent   Category?  @relation("Tree", fields: [parentId], references: [id])
   children Category[] @relation("Tree")
   products Product[]
 }
 
 model Ingredient {
-  id       String               @id @default(cuid())
-  name     String               @unique
+  id       String              @id @default(cuid())
+  name     String              @unique
   products ProductIngredient[]
 }
 
@@ -106,13 +107,17 @@ model User {
   provider     String?
   glowPoints   Int            @default(0)
   orderCount   Int            @default(0)
+  totalSpent   Int            @default(0)
   lastOrderAt  DateTime?
   referralCode String?        @unique
   referredBy   String?
   orders       Order[]
   reviews      Review[]
   wishlist     WishlistItem[]
+  referrals    Referral[]     @relation("Referrer")
+  referred     Referral[]     @relation("Referred")
   createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model Order {
@@ -132,6 +137,8 @@ model Order {
   status        OrderStatus   @default(PENDING)
   phoneVerified Boolean       @default(false)
   estDelivery   DateTime?
+  smsSent       Boolean       @default(false)
+  whatsappSent  Boolean       @default(false)
   items         OrderItem[]
   createdAt     DateTime      @default(now())
 }
@@ -181,16 +188,57 @@ model Coupon {
   usageLimit Int?
   usedCount  Int          @default(0)
   active     Boolean      @default(true)
+  createdAt  DateTime     @default(now())
 }
 
 model AbandonedCart {
-  id            String    @id @default(cuid())
-  phone         String?
-  email         String?
-  payload       Json
-  recoveredAt   DateTime?
-  remindersSent Int       @default(0)
-  createdAt     DateTime  @default(now())
+  id               String    @id @default(cuid())
+  sessionId        String?
+  phone            String?
+  email            String?
+  payload          Json
+  itemsSnapshot    Json?
+  firstReminderAt  DateTime?
+  secondReminderAt DateTime?
+  remindersSent    Int       @default(0)
+  recoveredAt      DateTime?
+  recoveryMethod   String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Referral {
+  id           String   @id @default(cuid())
+  referrer     User     @relation("Referrer", fields: [referrerId], references: [id])
+  referrerId   String
+  referred     User?    @relation("Referred", fields: [referredId], references: [id])
+  referredId   String?
+  linkSlug     String   @unique
+  clicks       Int      @default(0)
+  conversions  Int      @default(0)
+  rewardGiven  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model AffiliateLink {
+  id             String   @id @default(cuid())
+  influencerName String
+  linkSlug       String   @unique
+  urlTarget      String
+  clicks         Int      @default(0)
+  conversions    Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+}
+
+model InventoryLog {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  change    Int
+  reason    String
+  batchNo   String?
+  createdAt DateTime @default(now())
 }
 
 model SiteConfig {

@@ -39,8 +39,8 @@ export default function AdminDashboard() {
       <div className="kicker">Admin control layer</div>
       <h1 className="font-display text-5xl mt-2">Navigation, rows, layout</h1>
       <p className="max-w-2xl mt-4 text-off-black/70">
-        Changes write to <code className="text-gold-dark">localStorage</code> today and map 1:1 to{" "}
-        <code className="text-gold-dark">src/config/site.ts</code> / the Prisma <code>SiteConfig</code> table tomorrow.
+        Visual reorder writes to localStorage for instant preview. Server config, coupons, inventory and
+        recovery live at <a className="text-gold-dark underline" href="/admin">/admin</a>.
         Hide or reorder anything independently. Refresh the homepage to see rows move.
       </p>
 
