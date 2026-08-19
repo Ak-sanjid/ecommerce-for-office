@@ -12,3 +12,4 @@ tsconfig.tsbuildinfo
 .env.local
 /prisma/migrations/dev.db*
 data/glow-store.json
+GLOW-beauty-complete.zip
