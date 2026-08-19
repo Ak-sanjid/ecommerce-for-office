@@ -109,6 +109,11 @@ export type UserRow = {
   createdAt: string;
 };
 
+export type SkuMeta = {
+  batch?: string;
+  expiry?: string;
+};
+
 export type StoreShape = {
   siteConfig: Record<string, unknown>;
   coupons: CouponRow[];
@@ -116,6 +121,7 @@ export type StoreShape = {
   abandoned: AbandonedRow[];
   affiliates: AffiliateRow[];
   stock: Record<string, number>;
+  skuMeta: Record<string, SkuMeta>;
   recoveryEnabled: boolean;
   orders: OrderRow[];
   restockAlerts: RestockAlertRow[];
@@ -199,6 +205,7 @@ function defaults(): StoreShape {
       },
     ],
     stock: Object.fromEntries(products.map((p) => [p.id, p.stock])),
+    skuMeta: Object.fromEntries(products.map((p) => [p.id, { batch: p.batch, expiry: p.expiry }])),
     recoveryEnabled: false,
     orders: [],
     restockAlerts: [],

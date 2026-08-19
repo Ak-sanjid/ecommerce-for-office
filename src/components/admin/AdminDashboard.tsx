@@ -133,10 +133,10 @@ export function AdminDashboard() {
       <div className="container-page py-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="kicker">Phase 4</p>
+            <p className="kicker">Phase 1–5</p>
             <h1 className="font-display text-3xl font-semibold mt-1">GLOW Admin</h1>
             <p className="text-sm text-off-black/50 mt-1">
-              Authenticated writes. Orders persist with stock, coupons and Glow Points.
+              Authenticated writes. Orders, stock, coupons, Glow Points, bulk SKU.
             </p>
           </div>
           <div className="flex gap-2">

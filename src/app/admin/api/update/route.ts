@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { verifyAdminToken, ADMIN_COOKIE } from "@/lib/adminAuth";
 import { setSiteConfig } from "@/lib/admin";
 import { applyUsage, upsertCoupon, validateCoupon } from "@/lib/coupons";
-import { logStockChange } from "@/lib/inventory";
+import { logStockChange, seedCatalog, updateSku } from "@/lib/inventory";
 import { recoverAbandoned, saveAbandoned, setRecoveryEnabled } from "@/lib/abandoned";
 import { registerConversion, trackClick, upsertAffiliate } from "@/lib/referral";
 import { updateOrderStatus } from "@/lib/orders";

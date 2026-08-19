@@ -45,6 +45,7 @@ async function main() {
     abandoned: [],
     affiliates: [{ influencerName: "Emily", linkSlug: "emily", urlTarget: "/collection/k-beauty?ref=emily", clicks: 0, conversions: 0, isActive: true }],
     stock: {},
+    skuMeta: {},
     recoveryEnabled: false,
     orders: [],
     restockAlerts: [],
