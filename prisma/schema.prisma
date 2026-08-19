@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String              @id @default(cuid())
+  slug          String              @unique
+  name          String
+  nameBn        String?
+  descriptionEn String              @db.Text
+  descriptionBn String?             @db.Text
+  howToUseEn    String?             @db.Text
+  howToUseBn    String?             @db.Text
+  price         Int
+  originalPrice Int?
+  stock         Int                 @default(0)
+  gender        Gender              @default(UNISEX)
+  batchNo       String?
+  expiryDate    DateTime?
+  isTopSelling  Boolean             @default(false)
+  isTodayOffer  Boolean             @default(false)
+  rating        Float               @default(0)
+  reviewCount   Int                 @default(0)
+  brand         Brand               @relation(fields: [brandId], references: [id])
+  brandId       String
+  category      Category            @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  media         Media[]
+  ingredients   ProductIngredient[]
+  badges        Badge[]
+  reviews       Review[]
+  orderItems    OrderItem[]
+  inventoryLogs InventoryLog[]
+  restockAlerts RestockAlert[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([brandId, categoryId, stock])
+}
+
+model Brand {
+  id         String    @id @default(cuid())
+  slug       String    @unique
+  name       String
+  logoUrl    String?
+  country    String?
+  isOfficial Boolean   @default(true)
+  themeColor String?
+  tagline    String?
+  fbPageId   String?
+  products   Product[]
+}
+
+model Category {
+  id       String     @id @default(cuid())
+  slug     String     @unique
+  name     String
+  nameBn   String?
+  icon     String?
+  order    Int        @default(0)
+  visible  Boolean    @default(true)
+  parentId String?
+  parent   Category?  @relation("Tree", fields: [parentId], references: [id])
+  children Category[] @relation("Tree")
+  products Product[]
+}
+
+model Ingredient {
+  id       String              @id @default(cuid())
+  name     String              @unique
+  products ProductIngredient[]
+}
+
+model ProductIngredient {
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId String
+
+  @@id([productId, ingredientId])
+}
+
+model Badge {
+  id       String    @id @default(cuid())
+  label    String    @unique
+  products Product[]
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  url       String
+  type      MediaType @default(IMAGE)
+  order     Int       @default(0)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String?
+  email        String?        @unique
+  phone        String?        @unique
+  provider     String?
+  glowPoints   Int            @default(0)
+  orderCount   Int            @default(0)
+  totalSpent   Int            @default(0)
+  lastOrderAt  DateTime?
+  referralCode String?        @unique
+  referredBy   String?
+  orders       Order[]
+  reviews      Review[]
+  wishlist     WishlistItem[]
+  referrals    Referral[]     @relation("Referrer")
+  referred     Referral[]     @relation("Referred")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique
+  user          User?         @relation(fields: [userId], references: [id])
+  userId        String?
+  guestName     String?
+  guestPhone    String?
+  guestAddress  String?
+  zone          Zone
+  deliveryFee   Int
+  subtotal      Int
+  discount      Int           @default(0)
+  total         Int
+  couponCode    String?
+  paymentMethod PaymentMethod
+  status        OrderStatus   @default(PENDING)
+  phoneVerified Boolean       @default(false)
+  estDelivery   DateTime?
+  smsSent       Boolean       @default(false)
+  whatsappSent  Boolean       @default(false)
+  items         OrderItem[]
+  createdAt     DateTime      @default(now())
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  unitPrice Int
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  user       User?        @relation(fields: [userId], references: [id])
+  userId     String?
+  authorName String
+  rating     Int
+  text       String       @db.Text
+  source     ReviewSource @default(USER)
+  photos     String[]
+  verified   Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+}
+
+model WishlistItem {
+  id        String @id @default(cuid())
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  productId String
+
+  @@unique([userId, productId])
+}
+
+model Coupon {
+  id         String       @id @default(cuid())
+  code       String       @unique
+  type       DiscountType
+  value      Int
+  minSpend   Int          @default(0)
+  startsAt   DateTime
+  endsAt     DateTime
+  usageLimit Int?
+  usedCount  Int          @default(0)
+  active     Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+}
+
+model AbandonedCart {
+  id               String    @id @default(cuid())
+  sessionId        String?
+  phone            String?
+  email            String?
+  payload          Json
+  itemsSnapshot    Json?
+  firstReminderAt  DateTime?
+  secondReminderAt DateTime?
+  remindersSent    Int       @default(0)
+  recoveredAt      DateTime?
+  recoveryMethod   String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Referral {
+  id           String   @id @default(cuid())
+  referrer     User     @relation("Referrer", fields: [referrerId], references: [id])
+  referrerId   String
+  referred     User?    @relation("Referred", fields: [referredId], references: [id])
+  referredId   String?
+  linkSlug     String   @unique
+  clicks       Int      @default(0)
+  conversions  Int      @default(0)
+  rewardGiven  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model AffiliateLink {
+  id             String   @id @default(cuid())
+  influencerName String
+  linkSlug       String   @unique
+  urlTarget      String
+  clicks         Int      @default(0)
+  conversions    Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+}
+
+model InventoryLog {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  change    Int
+  reason    String
+  batchNo   String?
+  createdAt DateTime @default(now())
+}
+
+model SiteConfig {
+  id        String   @id @default("singleton")
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+enum Gender {
+  WOMEN
+  MEN
+  UNISEX
+  BABY
+}
+
+enum MediaType {
+  IMAGE
+  GIF
+  VIDEO
+}
+
+enum Zone {
+  INSIDE_DHAKA
+  OUTSIDE_DHAKA
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  ROCKET
+  COD
+  CARD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum ReviewSource {
+  FACEBOOK
+  USER
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+model RestockAlert {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  phone     String
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId, notified])
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
