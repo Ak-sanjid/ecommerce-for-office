@@ -1,15 +1,18 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
         cream: {
-          DEFAULT: "#FBF8F3",
-          deep: "#F4EDE1",
-          dark: "#EDE3D3",
+          DEFAULT: "rgb(var(--bg) / <alpha-value>)",
+          deep: "rgb(var(--bg-deep) / <alpha-value>)",
+          dark: "rgb(var(--bg-dark) / <alpha-value>)",
         },
+        // `white` is re-mapped to a CSS variable so cards/surfaces follow the theme.
+        white: "rgb(var(--surface) / <alpha-value>)",
         gold: {
           DEFAULT: "#C9A45C",
           light: "#E4CE9E",
@@ -20,8 +23,8 @@ const config: Config = {
           light: "#F0D4CF",
           dark: "#B87A72",
         },
-        "off-black": "#2B2B2B",
-        "review-grey": "#8A8A8A",
+        "off-black": "rgb(var(--ink) / <alpha-value>)",
+        "review-grey": "rgb(var(--ink-soft) / <alpha-value>)",
         "male-tint": {
           DEFAULT: "#A9B4B8",
           dark: "#6B7B80",
@@ -32,6 +35,8 @@ const config: Config = {
           dark: "#C49490",
           light: "#F5E0DE",
         },
+        // Literal white for text sitting on coloured badges / overlays.
+        "on-accent": "#FFFFFF",
       },
       fontFamily: {
         display: ["var(--font-cormorant)", "serif"],

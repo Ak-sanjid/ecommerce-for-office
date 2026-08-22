@@ -3,11 +3,16 @@ import { cookies } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminToken } from "@/lib/adminAuth";
 import { updateOrderStatus } from "@/lib/orders";
 import { ORDER_STATUSES } from "@/lib/commerce";
+import { can } from "@/lib/rbac";
 import type { OrderStatus } from "@/lib/jsonStore";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const token = cookies().get(ADMIN_COOKIE)?.value;
-  if (!verifyAdminToken(token)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  const session = verifyAdminToken(token);
+  if (!session) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (!can(session.role, "orders.update")) {
+    return NextResponse.json({ ok: false, error: "Insufficient role" }, { status: 403 });
+  }
 
   const { status } = (await req.json().catch(() => ({}))) as { status?: string };
   if (!status || !(ORDER_STATUSES as readonly string[]).includes(status)) {

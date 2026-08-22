@@ -14,8 +14,19 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-Admin: `/admin` · password `glow-admin`  
+Admin: `/admin` · `owner / glow-admin`  
 Coupon: `GLOW10` (10% over ৳1,000)
+
+## This branch adds
+
+| Feature | What it does |
+|---|---|
+| **Sticky 2-line header** | New layout **C** (default): line 1 = brand + search + actions, line 2 = category nav. Both stay pinned on scroll. |
+| **Theme (dark mode)** | Sun/moon toggle in the header — persists to `localStorage`, switches the whole storefront via CSS tokens. |
+| **Go Live** | `/admin → Go Live`: launch checklist + a master switch. When off, the storefront shows a "coming soon" page; `/admin` stays reachable. |
+| **RBAC** | Roles **owner / manager / staff** with per-role permissions, scoped admin sessions, and a team manager (owner-only). |
+
+RBAC demo accounts (seeded on first run): `owner / glow-admin` · `manager / glow-manager` · `staff / glow-staff`.
 
 ## What is included
 
@@ -51,6 +62,7 @@ npm run db:seed
 Copy `.env.example` → `.env.local`. Required for admin:
 
 ```
+ADMIN_USERNAME=owner
 ADMIN_PASSWORD=glow-admin
 ADMIN_SECRET=dev-change-me-32chars-min!!
 ```

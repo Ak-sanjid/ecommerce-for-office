@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useLang } from "@/context/LangContext";
 import { siteConfig } from "@/config/site";
 import { Icon } from "@/components/shared/Icon";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { openCart, totalItems, wishlist } = useCart();
@@ -32,6 +33,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
         </Link>
 
         <div className="flex items-center gap-1">
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setLang(lang === "en" ? "bn" : "en")}
@@ -99,7 +101,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
           >
             <Icon name="cart" size={19} />
             {totalItems > 0 && (
-              <span className="absolute top-0 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-gold px-1 text-[10px] font-bold text-white">
+              <span className="absolute top-0 right-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-gold px-1 text-[10px] font-bold text-on-accent">
                 {totalItems}
               </span>
             )}

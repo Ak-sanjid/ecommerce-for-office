@@ -114,6 +114,17 @@ export type SkuMeta = {
   expiry?: string;
 };
 
+export type AdminRole = "owner" | "manager" | "staff";
+
+export type AdminUserRow = {
+  id: string;
+  username: string;
+  passwordHash: string;
+  role: AdminRole;
+  active: boolean;
+  createdAt: string;
+};
+
 export type StoreShape = {
   siteConfig: Record<string, unknown>;
   coupons: CouponRow[];
@@ -126,6 +137,10 @@ export type StoreShape = {
   orders: OrderRow[];
   restockAlerts: RestockAlertRow[];
   users: UserRow[];
+  /** Storefront status: true = live, false = "coming soon" maintenance. */
+  live: boolean;
+  /** Admin users for role-based access control (RBAC). */
+  adminUsers: AdminUserRow[];
 };
 
 const STORE_PATH = join(process.cwd(), "data", "glow-store.json");
@@ -137,7 +152,7 @@ function defaults(): StoreShape {
   in3.setDate(in3.getDate() + 3);
   return {
     siteConfig: {
-      header_layout: "A",
+      header_layout: "C",
       promo_strip: {
         enabled: true,
         messages: ["Free delivery above ৳2,000", "Use GLOW10 for 10% off", "100% Authentic"],
@@ -210,6 +225,8 @@ function defaults(): StoreShape {
     orders: [],
     restockAlerts: [],
     users: [],
+    live: true,
+    adminUsers: [],
   };
 }
 
@@ -231,6 +248,8 @@ export function readStore(): StoreShape {
       orders: parsed.orders ?? [],
       restockAlerts: parsed.restockAlerts ?? [],
       users: parsed.users ?? [],
+      live: parsed.live ?? true,
+      adminUsers: parsed.adminUsers ?? [],
     };
   } catch {
     const seed = defaults();

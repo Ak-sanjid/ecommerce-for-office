@@ -162,10 +162,10 @@ export function ShoppableReels() {
           return (
             <article key={r.id} className="relative w-[220px] h-[360px] rounded-2xl overflow-hidden">
               <img src={r.image} alt="" className="w-full h-full object-cover" loading="lazy" />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-off-black/30 grid place-items-center text-white">
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-off-black/30 grid place-items-center text-on-accent">
                 ▶
               </span>
-              <div className="absolute inset-x-0 bottom-0 p-4 pt-10 bg-gradient-to-t from-off-black/70 to-transparent text-white">
+              <div className="absolute inset-x-0 bottom-0 p-4 pt-10 bg-gradient-to-t from-off-black/70 to-transparent text-on-accent">
                 <h3 className="font-display text-xl mb-2">{loc(r.title, r.titleBn, lang)}</h3>
                 {p && (
                   <button type="button" className="btn-primary" onClick={() => addItem(p)}>

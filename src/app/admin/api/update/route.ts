@@ -3,15 +3,40 @@ import { cookies } from "next/headers";
 import { verifyAdminToken, ADMIN_COOKIE } from "@/lib/adminAuth";
 import { setSiteConfig } from "@/lib/admin";
 import { applyUsage, upsertCoupon, validateCoupon } from "@/lib/coupons";
-import { logStockChange, seedCatalog, updateSku } from "@/lib/inventory";
+import { logStockChange } from "@/lib/inventory";
 import { recoverAbandoned, saveAbandoned, setRecoveryEnabled } from "@/lib/abandoned";
 import { registerConversion, trackClick, upsertAffiliate } from "@/lib/referral";
 import { updateOrderStatus } from "@/lib/orders";
+import { removeAdminUser, upsertAdminUser, can, type Permission } from "@/lib/rbac";
+import { setLive } from "@/lib/goLive";
 import type { OrderStatus } from "@/lib/jsonStore";
+
+const PERMISSION_BY_KEY: Record<string, Permission> = {
+  coupon_validate: "coupons.manage",
+  coupon_apply: "coupons.manage",
+  coupon_upsert: "coupons.manage",
+  stock_change: "inventory.manage",
+  abandoned_save: "catalog.manage",
+  abandoned_recover: "catalog.manage",
+  abandoned_recovery_enabled: "catalog.manage",
+  ref_click: "catalog.manage",
+  ref_convert: "catalog.manage",
+  affiliate_upsert: "catalog.manage",
+  order_status: "orders.update",
+  go_live_toggle: "settings.manage",
+  team_upsert: "team.manage",
+  team_remove: "team.manage",
+  header_layout: "catalog.manage",
+  promo_strip: "catalog.manage",
+  nav_items: "catalog.manage",
+  home_rows: "catalog.manage",
+  analytics: "catalog.manage",
+};
 
 export async function POST(req: Request) {
   const token = cookies().get(ADMIN_COOKIE)?.value;
-  if (!verifyAdminToken(token)) {
+  const session = verifyAdminToken(token);
+  if (!session) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -20,6 +45,11 @@ export async function POST(req: Request) {
     const { key, value } = body;
     if (typeof key !== "string") {
       return NextResponse.json({ ok: false, error: "bad payload" }, { status: 400 });
+    }
+
+    const required = PERMISSION_BY_KEY[key] ?? "settings.manage";
+    if (!can(session.role, required)) {
+      return NextResponse.json({ ok: false, error: `Role ${session.role} cannot ${required}` }, { status: 403 });
     }
 
     if (key === "coupon_validate") {
@@ -69,6 +99,18 @@ export async function POST(req: Request) {
       const v = value as { id: string; status: OrderStatus };
       const row = await updateOrderStatus(v.id, v.status);
       return NextResponse.json({ ok: Boolean(row), result: row });
+    }
+    if (key === "go_live_toggle") {
+      setLive(Boolean(value));
+      return NextResponse.json({ ok: true, live: Boolean(value) });
+    }
+    if (key === "team_upsert") {
+      const row = upsertAdminUser(value as Parameters<typeof upsertAdminUser>[0]);
+      return NextResponse.json({ ok: true, result: row });
+    }
+    if (key === "team_remove") {
+      const ok = removeAdminUser(String((value as { id: string }).id));
+      return NextResponse.json({ ok });
     }
 
     if (typeof value !== "object" && typeof value !== "string" && typeof value !== "boolean") {

@@ -118,7 +118,7 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             href={`https://wa.me/${siteConfig.whatsapp}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-lg bg-[#25D366] py-3 text-sm font-medium text-white"
+            className="flex items-center justify-center gap-2 rounded-lg bg-[#25D366] py-3 text-sm font-medium text-on-accent"
           >
             <Icon name="whatsapp" size={16} /> {lang === "bn" ? "হোয়াটসঅ্যাপে চ্যাট" : "Chat on WhatsApp"}
           </a>
