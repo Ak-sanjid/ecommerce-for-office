@@ -45,7 +45,7 @@ export function ProductCard({
         <Icon name="heart" size={15} filled={wished} />
       </button>
       {off ? (
-        <span className="absolute left-2 top-2 z-10 rounded-full bg-pink-gold px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="absolute left-2 top-2 z-10 rounded-full bg-pink-gold px-2 py-0.5 text-[10px] font-bold text-on-accent">
           -{off}%
         </span>
       ) : product.isTopSelling ? (

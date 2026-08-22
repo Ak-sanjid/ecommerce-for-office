@@ -64,9 +64,9 @@ export function ShopListing({ slug, type = "", concern = "" }: { slug: string; t
     <div
       className={`container-page py-8 ${
         tone === "male"
-          ? "[&_.btn-primary]:bg-male-tint-dark [&_.btn-primary]:text-white"
+          ? "[&_.btn-primary]:bg-male-tint-dark [&_.btn-primary]:text-on-accent"
           : tone === "female"
-            ? "[&_.btn-primary]:bg-female-tint-dark [&_.btn-primary]:text-white"
+            ? "[&_.btn-primary]:bg-female-tint-dark [&_.btn-primary]:text-on-accent"
             : ""
       }`}
     >

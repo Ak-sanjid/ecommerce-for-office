@@ -47,7 +47,7 @@ export function ProductGallery({ product }: { product: Product }) {
           }}
         />
         {product.video && (
-          <span className="absolute left-3 top-3 rounded-full bg-off-black/60 px-2 py-0.5 text-[10px] text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-off-black/60 px-2 py-0.5 text-[10px] text-on-accent">
             Video
           </span>
         )}

@@ -1,4 +1,4 @@
-export type HeaderLayout = "A" | "B";
+export type HeaderLayout = "A" | "B" | "C";
 
 export interface NavItemConfig {
   id: string;
@@ -53,7 +53,7 @@ export const siteConfig = {
   freeSampleThreshold: 3000,
   defaultLocale: "en" as "en" | "bn",
 
-  headerLayout: "A" as HeaderLayout,
+  headerLayout: "C" as HeaderLayout,
 
   promoStrip: {
     enabled: true,

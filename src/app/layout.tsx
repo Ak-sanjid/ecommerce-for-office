@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/shared/Providers";
@@ -10,6 +11,8 @@ import { SkinQuiz } from "@/components/home/SkinQuiz";
 import { AnalyticsScripts } from "@/components/AnalyticsScripts";
 import { ReferralCapture } from "@/components/shared/ReferralCapture";
 import { AbandonedWatcher } from "@/components/shared/AbandonedWatcher";
+import { MaintenanceGate } from "@/components/MaintenanceGate";
+import { isLive } from "@/lib/goLive";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://glowbeauty.com.bd"),
@@ -29,10 +32,19 @@ export const viewport: Viewport = {
   themeColor: "#FBF8F3",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const live = isLive();
+
   return (
     <html lang="en" className="font-body">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('glow-theme');if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark'}}catch(e){}`,
+          }}
+        />
         <link rel="icon" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -44,17 +56,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AnalyticsScripts />
       </head>
       <body className="font-body bg-cream text-off-black antialiased">
-        <Providers>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <CartSlideOut />
-          <AccountModal />
-          <SkinQuiz />
-          <AIChatBubble />
-          <ReferralCapture />
-          <AbandonedWatcher />
-        </Providers>
+        <Suspense fallback={null}>
+          <MaintenanceGate live={live}>
+            <Providers>
+              <Header />
+              <main className="min-h-screen">{children}</main>
+              <Footer />
+              <CartSlideOut />
+              <AccountModal />
+              <SkinQuiz />
+              <AIChatBubble />
+              <ReferralCapture />
+              <AbandonedWatcher />
+            </Providers>
+          </MaintenanceGate>
+        </Suspense>
         <script
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}`,

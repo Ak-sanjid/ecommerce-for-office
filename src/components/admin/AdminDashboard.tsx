@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { products } from "@/data/products";
 import { ORDER_STATUSES } from "@/lib/commerce";
+import { ROLE_LABELS, ROLES, can, type Permission, type Role } from "@/lib/permissions";
+import type { AdminSession } from "@/lib/adminAuth";
+import { Icon } from "@/components/shared/Icon";
 
 type OrderStatus = (typeof ORDER_STATUSES)[number];
 type OrderRow = {
@@ -19,27 +22,31 @@ type OrderRow = {
   createdAt: string;
 };
 
-const SECTIONS = [
-  { id: "layout", label: "Header Layout" },
-  { id: "promo", label: "Promo Strip" },
-  { id: "nav", label: "Navigation Editor" },
-  { id: "rows", label: "Homepage Rows" },
-  { id: "orders", label: "Orders" },
-  { id: "coupons", label: "Coupons & Flash" },
-  { id: "inventory", label: "Inventory" },
-  { id: "restock", label: "Restock alerts" },
-  { id: "referral", label: "Referrals / Affiliate" },
-  { id: "analytics", label: "Pixels & GA4" },
-  { id: "abandoned", label: "Abandoned Recovery" },
+const SECTIONS: Array<{ id: string; label: string; perm: Permission }> = [
+  { id: "layout", label: "Header Layout", perm: "catalog.manage" },
+  { id: "promo", label: "Promo Strip", perm: "catalog.manage" },
+  { id: "nav", label: "Navigation Editor", perm: "catalog.manage" },
+  { id: "rows", label: "Homepage Rows", perm: "catalog.manage" },
+  { id: "orders", label: "Orders", perm: "orders.view" },
+  { id: "coupons", label: "Coupons & Flash", perm: "coupons.manage" },
+  { id: "inventory", label: "Inventory", perm: "inventory.manage" },
+  { id: "restock", label: "Restock alerts", perm: "orders.view" },
+  { id: "referral", label: "Referrals / Affiliate", perm: "catalog.manage" },
+  { id: "analytics", label: "Pixels & GA4", perm: "catalog.manage" },
+  { id: "abandoned", label: "Abandoned Recovery", perm: "catalog.manage" },
+  { id: "golive", label: "Go Live", perm: "settings.manage" },
+  { id: "team", label: "Team / RBAC", perm: "team.manage" },
 ];
 
 type Json = Record<string, unknown> | unknown[] | string | boolean | null;
 
-export function AdminDashboard() {
+export function AdminDashboard({ session }: { session: AdminSession }) {
   const [tab, setTab] = useState("orders");
   const [status, setStatus] = useState("");
   const [configs, setConfigs] = useState<Record<string, Json>>({});
   const router = useRouter();
+  const role: Role = session.role;
+  const visibleSections = SECTIONS.filter((s) => can(role, s.perm));
 
   const load = async () => {
     const keys = [
@@ -54,7 +61,9 @@ export function AdminDashboard() {
       "affiliates",
       "orders",
       "restock",
+      "goLive",
     ];
+    if (can(role, "team.manage")) keys.push("team");
     const out: Record<string, Json> = {};
     await Promise.all(
       keys.map(async (k) => {
@@ -63,6 +72,7 @@ export function AdminDashboard() {
           router.refresh();
           return;
         }
+        if (res.status === 403) return;
         const j = (await res.json()) as { value: Json };
         out[k] = j.value;
       }),
@@ -84,6 +94,11 @@ export function AdminDashboard() {
       router.refresh();
       return;
     }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      setStatus(`Denied: ${j.error ?? res.status}`);
+      return;
+    }
     setStatus(`Saved: ${key}`);
     load();
   };
@@ -95,6 +110,18 @@ export function AdminDashboard() {
 
   const layout = configs.header_layout;
   const promo = (configs.promo_strip ?? {}) as Record<string, unknown>;
+  const goLive = (configs.goLive ?? { live: true, ready: true, checks: [] }) as {
+    live: boolean;
+    ready: boolean;
+    checks: Array<{ id: string; label: string; ok: boolean; required: boolean; detail: string }>;
+  };
+  const team = (configs.team ?? []) as Array<{
+    id: string;
+    username: string;
+    role: Role;
+    active: boolean;
+    createdAt: string;
+  }>;
   const inventory = (configs.inventory ?? { logs: [], stock: [] }) as {
     logs: Array<{ id: string; name: string; change: number; reason: string; createdAt: string }>;
     stock: Array<{ id: string; name: string; stock: number; batch: string; expiry: string }>;
@@ -136,7 +163,10 @@ export function AdminDashboard() {
             <p className="kicker">Phase 1–5</p>
             <h1 className="font-display text-3xl font-semibold mt-1">GLOW Admin</h1>
             <p className="text-sm text-off-black/50 mt-1">
-              Authenticated writes. Orders, stock, coupons, Glow Points, bulk SKU.
+              Signed in as <strong>{session.name}</strong> ·{" "}
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-medium text-gold-dark">
+                <Icon name="shield" size={12} /> {ROLE_LABELS[role]}
+              </span>
             </p>
           </div>
           <div className="flex gap-2">
@@ -150,7 +180,7 @@ export function AdminDashboard() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          {SECTIONS.map((s) => (
+          {visibleSections.map((s) => (
             <button
               key={s.id}
               type="button"
@@ -170,9 +200,11 @@ export function AdminDashboard() {
           {tab === "layout" && (
             <section>
               <h2 className="font-display text-xl">Header Layout</h2>
-              <p className="text-xs text-off-black/50">A = search + shortcuts + category. B = full category + promo strip.</p>
+              <p className="text-xs text-off-black/50">
+                A = search + shortcuts + category. B = full category + promo strip. C = sticky 2-line (logo/search row + category row).
+              </p>
               <div className="mt-3 flex gap-2">
-                {(["A", "B"] as const).map((v) => (
+                {(["A", "B", "C"] as const).map((v) => (
                   <button
                     key={v}
                     type="button"
@@ -223,17 +255,21 @@ export function AdminDashboard() {
                       <span>
                         <strong>{o.orderNumber}</strong> · ৳{o.total} · {o.guestName || "Guest"} · {o.guestPhone || "—"}
                       </span>
-                      <select
-                        className="input-field py-1 w-40 text-xs"
-                        value={o.status}
-                        onChange={(e) => save("order_status", { id: o.orderNumber, status: e.target.value as OrderStatus })}
-                      >
-                        {ORDER_STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
+                      {can(role, "orders.update") ? (
+                        <select
+                          className="input-field py-1 w-40 text-xs"
+                          value={o.status}
+                          onChange={(e) => save("order_status", { id: o.orderNumber, status: e.target.value as OrderStatus })}
+                        >
+                          {ORDER_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="badge-gold">{o.status}</span>
+                      )}
                     </div>
                     <p className="mt-1 text-[11px] text-off-black/45">
                       {o.paymentMethod} · {o.items.length} items · {o.createdAt.slice(0, 16)}
@@ -365,7 +401,126 @@ export function AdminDashboard() {
               </ul>
             </section>
           )}
+
+          {tab === "golive" && (
+            <section>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl flex items-center gap-2">
+                    <Icon name="rocket" size={18} className="text-gold" /> Go Live
+                  </h2>
+                  <p className="text-xs text-off-black/50 mt-1">
+                    When the store is <strong>off</strong>, visitors see a “coming soon” page. Admin stays reachable.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => save("go_live_toggle", !goLive.live)}
+                  className={goLive.live ? "btn-outline" : "btn-primary"}
+                >
+                  {goLive.live ? "Take store offline" : "Go Live"}
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {goLive.checks.map((c) => (
+                  <div key={c.id} className="flex items-start gap-2 rounded-xl border border-gold/15 px-3 py-2 text-sm">
+                    <span className={`mt-0.5 grid h-4 w-4 place-items-center rounded-full ${c.ok ? "bg-gold/20 text-gold-dark" : "bg-pink-gold/20 text-pink-gold-dark"}`}>
+                      <Icon name={c.ok ? "check" : "close"} size={10} />
+                    </span>
+                    <span>
+                      <span className="font-medium">{c.label}</span>
+                      <span className={`ml-1 text-[10px] uppercase tracking-wide ${c.required ? "text-gold-dark" : "text-off-black/40"}`}>
+                        {c.required ? "required" : "optional"}
+                      </span>
+                      <span className="block text-xs text-off-black/50">{c.detail}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-3 text-xs text-off-black/50">
+                Status: <strong>{goLive.live ? "Live" : "Offline (maintenance)"}</strong>
+                {goLive.live ? " · storefront is open" : " · storefront shows coming soon"} · required checks {goLive.ready ? "all pass" : "pending"}.
+              </p>
+            </section>
+          )}
+
+          {tab === "team" && (
+            <section>
+              <h2 className="font-display text-xl flex items-center gap-2">
+                <Icon name="users" size={18} className="text-gold" /> Team / RBAC
+              </h2>
+              <p className="text-xs text-off-black/50">Owner · Manager · Staff — each role maps to a set of permissions.</p>
+              <ul className="mt-3 space-y-2 text-sm">
+                {team.map((u) => (
+                  <li key={u.id} className="flex items-center justify-between border border-gold/15 rounded-xl px-3 py-2">
+                    <span>
+                      <strong>{u.username}</strong>{" "}
+                      <span className="badge-gold ml-1">{ROLE_LABELS[u.role]}</span>
+                      {!u.active && <span className="ml-1 text-[10px] uppercase text-pink-gold-dark">disabled</span>}
+                    </span>
+                    {u.id !== "admin_owner" && (
+                      <button
+                        type="button"
+                        className="text-xs text-pink-gold-dark"
+                        onClick={() => save("team_remove", { id: u.id })}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <TeamForm onSave={(input) => save("team_upsert", input)} />
+            </section>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamForm({ onSave }: { onSave: (input: { username: string; role: Role; password: string }) => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<Role>("staff");
+
+  return (
+    <div className="mt-4 rounded-xl border border-gold/15 p-3">
+      <p className="text-xs font-medium text-off-black/60 mb-2">Invite a teammate</p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          className="input-field py-2 text-sm max-w-[180px]"
+          placeholder="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          className="input-field py-2 text-sm max-w-[180px]"
+          placeholder="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <select className="input-field py-2 w-32 text-sm" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+          {ROLES.map((r) => (
+            <option key={r} value={r}>
+              {ROLE_LABELS[r]}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="btn-secondary text-xs"
+          disabled={!username.trim() || !password}
+          onClick={() => {
+            onSave({ username: username.trim(), role, password });
+            setPassword("");
+          }}
+        >
+          Add user
+        </button>
       </div>
     </div>
   );
@@ -378,7 +533,7 @@ function JsonEditor({ value, onSave }: { value: Json; onSave: (v: unknown) => vo
   }, [value]);
   return (
     <div className="mt-3">
-      <textarea className="w-full rounded-xl border p-2 font-mono text-xs min-h-[140px]" value={text} onChange={(e) => setText(e.target.value)} />
+      <textarea className="w-full rounded-xl border p-2 font-mono text-xs min-h-[140px] bg-white text-off-black" value={text} onChange={(e) => setText(e.target.value)} />
       <button
         type="button"
         className="btn-secondary mt-2"

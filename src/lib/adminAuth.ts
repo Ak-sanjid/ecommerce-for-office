@@ -1,36 +1,49 @@
 import crypto from "crypto";
+import type { Role } from "./permissions";
 
 const SECRET = process.env.ADMIN_SECRET ?? "dev-change-me-32chars-min!!";
 export const ADMIN_COOKIE = "glow_admin";
 const TTL = 1000 * 60 * 60 * 8; // 8h
 
-export function createAdminToken(): string {
-  const body = Buffer.from(JSON.stringify({ exp: Date.now() + TTL })).toString("base64url");
+export type AdminSession = {
+  sub: string;
+  name: string;
+  role: Role;
+  exp: number;
+};
+
+export function createAdminToken(role: Role, sub: string, name: string): string {
+  const body = Buffer.from(JSON.stringify({ exp: Date.now() + TTL, sub, name, role })).toString(
+    "base64url",
+  );
   const sig = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
   return `${body}.${sig}`;
 }
 
-export function verifyAdminToken(token?: string): boolean {
-  if (!token) return false;
+export function verifyAdminToken(token?: string): AdminSession | null {
+  if (!token) return null;
   const [body, sig] = token.split(".");
-  if (!body || !sig) return false;
+  if (!body || !sig) return null;
   const expected = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   try {
-    return (JSON.parse(Buffer.from(body, "base64url").toString()).exp as number) > Date.now();
+    const parsed = JSON.parse(Buffer.from(body, "base64url").toString()) as {
+      exp?: number;
+      sub?: string;
+      name?: string;
+      role?: string;
+    };
+    if (!parsed.exp || parsed.exp < Date.now()) return null;
+    if (!parsed.sub || !parsed.role) return null;
+    return {
+      sub: parsed.sub,
+      name: parsed.name ?? parsed.sub,
+      role: parsed.role as Role,
+      exp: parsed.exp,
+    };
   } catch {
-    return false;
+    return null;
   }
-}
-
-export function timingSafeEqualStrings(a: string, b: string): boolean {
-  const ba = Buffer.from(a);
-  const bb = Buffer.from(b);
-  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
-}
-
-export function requireAdminPassword(): string | null {
-  return process.env.ADMIN_PASSWORD ?? null;
 }

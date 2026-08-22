@@ -7,6 +7,7 @@ import { QuickCategoryRow } from "./QuickCategoryRow";
 import { CategoryBar } from "./CategoryBar";
 import { PromoStrip } from "./PromoStrip";
 import { MobileMenu } from "./MobileMenu";
+import { TwoLineHeader } from "./TwoLineHeader";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { cn } from "@/lib/utils";
 
@@ -43,33 +44,39 @@ export function Header() {
           scrolled ? "bg-cream/95 backdrop-blur-md shadow-card" : "bg-cream",
         )}
       >
-        <TopBar onOpenMenu={() => setMenuOpen(true)} />
-
-        {layout === "A" ? (
-          <>
-            <div className="container-page hidden lg:block">
-              <SearchBar />
-            </div>
-            <QuickCategoryRow />
-            <div
-              className={cn(
-                "hidden lg:block overflow-hidden transition-[max-height,opacity] duration-200",
-                scrolled ? "max-h-0 opacity-0" : "max-h-14 opacity-100",
-              )}
-            >
-              <CategoryBar />
-            </div>
-          </>
+        {layout === "C" ? (
+          <TwoLineHeader onOpenMenu={() => setMenuOpen(true)} />
         ) : (
           <>
-            <CategoryBar />
-            <PromoStrip />
+            <TopBar onOpenMenu={() => setMenuOpen(true)} />
+
+            {layout === "A" ? (
+              <>
+                <div className="container-page hidden lg:block">
+                  <SearchBar />
+                </div>
+                <QuickCategoryRow />
+                <div
+                  className={cn(
+                    "hidden lg:block overflow-hidden transition-[max-height,opacity] duration-200",
+                    scrolled ? "max-h-0 opacity-0" : "max-h-14 opacity-100",
+                  )}
+                >
+                  <CategoryBar />
+                </div>
+              </>
+            ) : (
+              <>
+                <CategoryBar />
+                <PromoStrip />
+              </>
+            )}
+
+            <div className="container-page pb-3 lg:hidden">
+              <SearchBar compact />
+            </div>
           </>
         )}
-
-        <div className="container-page pb-3 lg:hidden">
-          <SearchBar compact />
-        </div>
       </header>
 
       <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />

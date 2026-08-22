@@ -29,7 +29,7 @@ export function BrandMegaMenu() {
                   key={L}
                   href={has ? `#brand-${L}` : undefined}
                   className={`grid h-6 w-6 place-items-center rounded text-[11px] font-medium transition-colors ${
-                    has ? "text-off-black/70 hover:bg-gold hover:text-white" : "text-off-black/20"
+                    has ? "text-off-black/70 hover:bg-gold hover:text-on-accent" : "text-off-black/20"
                   }`}
                 >
                   {L}

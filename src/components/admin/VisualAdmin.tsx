@@ -1,10 +1,12 @@
 "use client";
 
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { can, type Role } from "@/lib/permissions";
 import type { HeaderLayout, HomeRowConfig, NavItemConfig, ShortcutConfig } from "@/config/site";
 
-export function VisualAdmin() {
+export function VisualAdmin({ role }: { role: Role }) {
   const { config, overrides, save, reset } = useSiteConfig();
+  const allowed = can(role, "catalog.manage");
 
   const setLayout = (headerLayout: HeaderLayout) => save({ ...overrides, headerLayout });
 
@@ -34,6 +36,23 @@ export function VisualAdmin() {
     save({ ...overrides, [key]: [...rest, { id, visible }] });
   };
 
+  if (!allowed) {
+    return (
+      <div className="container-page py-10">
+        <div className="rounded-3xl bg-white p-8 shadow-card">
+          <p className="kicker">Restricted</p>
+          <h1 className="font-display text-3xl mt-1">Insufficient role</h1>
+          <p className="mt-2 text-off-black/60">
+            Your role ({role}) cannot edit catalog layout. Ask an owner or manager.
+          </p>
+          <a className="btn-primary mt-6 inline-flex" href="/admin">
+            Back to admin
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container-page py-10">
       <div className="kicker">Admin control layer</div>
@@ -49,14 +68,18 @@ export function VisualAdmin() {
 
       <div className="mt-8 flex flex-wrap gap-3 items-center">
         <span className="text-xs tracking-widest uppercase text-gold-dark">Header layout</span>
-        {(["A", "B"] as const).map((L) => (
+        {(["A", "B", "C"] as const).map((L) => (
           <button
             key={L}
             type="button"
             onClick={() => setLayout(L)}
             className={`px-4 h-9 rounded-full text-sm border ${config.headerLayout === L ? "border-gold bg-gold/15" : "border-gold/25"}`}
           >
-            {L === "A" ? "A · Search + shortcuts + category" : "B · Category bar + promo strip"}
+            {L === "A"
+              ? "A · Search + shortcuts + category"
+              : L === "B"
+                ? "B · Category bar + promo strip"
+                : "C · Sticky 2-line"}
           </button>
         ))}
         <button type="button" onClick={reset} className="btn-secondary ml-auto">

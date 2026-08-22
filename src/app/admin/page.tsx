@@ -8,5 +8,6 @@ export const dynamic = "force-dynamic";
 
 export default function AdminPage() {
   const token = cookies().get(ADMIN_COOKIE)?.value;
-  return verifyAdminToken(token) ? <AdminDashboard /> : <AdminLogin />;
+  const session = verifyAdminToken(token);
+  return session ? <AdminDashboard session={session} /> : <AdminLogin />;
 }

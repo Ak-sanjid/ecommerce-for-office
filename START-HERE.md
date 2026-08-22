@@ -55,7 +55,7 @@ npm run dev
 ব্রাউজারে খুলুন: http://localhost:3000
 
 - শপ: `/`
-- অ্যাডমিন: `/admin` → পাসওয়ার্ড `glow-admin`
+- অ্যাডমিন: `/admin` → পাসওয়ার্ড `owner / glow-admin`
 
 ---
 
@@ -103,7 +103,7 @@ git push -u origin main
 | `/category/skincare` | লিস্টিং + ফিল্টার |
 | `/product/p002` | প্রোডাক্ট পেজ |
 | `/checkout` | অর্ডার (কুপন `GLOW10`) |
-| `/admin` | অ্যাডমিন (পাসওয়ার্ড `glow-admin`) |
+| `/admin` | অ্যাডমিন (পাসওয়ার্ড `owner / glow-admin`) |
 | `/track` | অর্ডার ট্র্যাক |
 
 কুপন: `GLOW10` (৳১০০০+ এ ১০%) · `FLASH30` (৳২০০০+ এ ৩০%)

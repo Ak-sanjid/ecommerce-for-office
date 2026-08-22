@@ -8,12 +8,16 @@ import { listCoupons } from "@/lib/coupons";
 import { listInventory, listRestockAlerts, listStock } from "@/lib/inventory";
 import { listOrders } from "@/lib/orders";
 import { listUsers } from "@/lib/users";
+import { listAdminUsers } from "@/lib/rbac";
+import { getLaunchStatus } from "@/lib/goLive";
+import { can } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const token = cookies().get(ADMIN_COOKIE)?.value;
-  if (!verifyAdminToken(token)) return NextResponse.json({ value: null }, { status: 401 });
+  const session = verifyAdminToken(token);
+  if (!session) return NextResponse.json({ value: null }, { status: 401 });
 
   const key = new URL(req.url).searchParams.get("key") ?? "";
   if (key === "all") return NextResponse.json({ value: dumpStore() });
@@ -24,5 +28,12 @@ export async function GET(req: Request) {
   if (key === "orders") return NextResponse.json({ value: listOrders() });
   if (key === "restock") return NextResponse.json({ value: listRestockAlerts() });
   if (key === "users") return NextResponse.json({ value: listUsers() });
+  if (key === "goLive") return NextResponse.json({ value: getLaunchStatus() });
+  if (key === "team") {
+    if (!can(session.role, "team.manage")) {
+      return NextResponse.json({ value: null }, { status: 403 });
+    }
+    return NextResponse.json({ value: listAdminUsers() });
+  }
   return NextResponse.json({ value: (await getSiteConfig(key)) ?? null });
 }
